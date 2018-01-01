@@ -1,6 +1,6 @@
 # go-etherdelta
 
-> [EtherDelta](https://etherdelta.com/) Client for [Golang](https://golang.org/).
+> [EtherDelta](https://etherdelta.com/) client for [Golang](https://golang.org/).
 
 ## Documentation
 
