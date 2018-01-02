@@ -120,7 +120,7 @@ func (client WSClient) EmitListenOnceAndClose(topic string, requestBody *WSEmitB
 	}()
 }
 
-func (client WSClient) PostOrder(order OrderPost) error {
+func (client WSClient) PostOrder(order *OrderPost) error {
 	message, err := json.Marshal(order)
 
 	if err != nil {

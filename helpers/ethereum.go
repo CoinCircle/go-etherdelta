@@ -1,11 +1,11 @@
-package eth
+package helpers
 
 import (
 	"context"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/miguelmota/go-etherdelta/ethereum/token"
+	"github.com/miguelmota/go-etherdelta/helpers/token"
 	"github.com/shopspring/decimal"
 	"math/big"
 	"strconv"

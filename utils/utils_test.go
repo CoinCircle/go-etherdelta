@@ -11,3 +11,7 @@ func TestRandInt(t *testing.T) {
 		t.Errorf("Expected rand in to between 4 < x < 11, got %s", n)
 	}
 }
+
+func TestKeyExists(t *testing.T) {
+
+}

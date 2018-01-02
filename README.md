@@ -2,8 +2,6 @@
 
 > [EtherDelta](https://etherdelta.com/) client for [Golang](https://golang.org/).
 
-**NOTICE: currency in pre-alpha stage. Not ready for production.**
-
 ## Documentation
 
 [https://godoc.org/github.com/miguelmota/go-etherdelta](https://godoc.org/github.com/miguelmota/go-etherdelta)

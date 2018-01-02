@@ -1,0 +1,10 @@
+x GetOrderBook
+x GetTokenTicker
+GetTokenPrice
+GetTokenBalance
+PostOrder
+MakeOrder
+CancelOrder
+MakeTrade
+x DepositEth
+x WithdrawToken

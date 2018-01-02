@@ -1,8 +1,10 @@
 package etherdelta
 
 import (
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/graarh/golang-socketio"
 	"github.com/shopspring/decimal"
+	"math/big"
 )
 
 type OrderBook struct {
@@ -46,13 +48,66 @@ type OrderPost struct {
 }
 
 type TokenTicker struct {
-	Ask           decimal.Decimal `json:"ask"`
-	BaseVolume    decimal.Decimal `json:"baseVolume"`
-	Bid           decimal.Decimal `json:"bid"`
-	Last          decimal.Decimal `json:"last"`
-	PercentChange decimal.Decimal `json:"percentChange"`
-	QuoteVolume   decimal.Decimal `json:"quoteVolume"`
-	TokenAddress  string          `json:"tokenAddr"`
+	Ask           *decimal.Decimal `json:"ask"`
+	BaseVolume    *decimal.Decimal `json:"baseVolume"`
+	Bid           *decimal.Decimal `json:"bid"`
+	Last          *decimal.Decimal `json:"last"`
+	PercentChange *decimal.Decimal `json:"percentChange"`
+	QuoteVolume   *decimal.Decimal `json:"quoteVolume"`
+	TokenAddress  string           `json:"tokenAddr"`
+}
+
+type GetOrderBookOpts struct {
+	TokenAddress string
+	UserAddress  string
+}
+
+type GetTokenTickerOpts struct {
+	TokenSymbol string
+}
+
+type GetTokenPriceOpts struct {
+	TokenSymbol string
+}
+
+type GetTokenBalanceOpts struct {
+	TokenAddress string
+	UserAddress  string
+}
+
+type PostOrderOpts struct {
+	Order        *OrderPost
+	TokenAddress string
+	UserAddress  string
+}
+
+type MakeOrderOpts struct {
+	PrivateKey   string
+	TokenAddress string
+	UserAddress  string
+	Amount       *decimal.Decimal
+	EthCost      *decimal.Decimal
+}
+
+type CancelOrderOpts struct {
+	PrivateKey string
+	Order      *OrderPost
+}
+
+type MakeTradeOpts struct {
+	Auth    *bind.TransactOpts
+	Order   *OrderPost
+	EthCost *big.Int
+}
+
+type DepositEthOpts struct {
+	Auth *bind.TransactOpts
+}
+
+type WithdrawTokenOpts struct {
+	Auth         *bind.TransactOpts
+	TokenAddress string
+	TokenAmount  *big.Int
 }
 
 type WSClient struct {
@@ -66,9 +121,9 @@ type WSRequest struct {
 }
 
 type WSEmitBody struct {
-	Token string    `json:"token"`
-	User  string    `json:"user"`
-	Order OrderPost `json:"-"` // omit
+	Token string     `json:"token"`
+	User  string     `json:"user"`
+	Order *OrderPost `json:"-"` // omit
 }
 
 type Message interface{}

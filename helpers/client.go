@@ -1,4 +1,4 @@
-package eth
+package helpers
 
 import (
 	"github.com/ethereum/go-ethereum/ethclient"

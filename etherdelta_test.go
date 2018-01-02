@@ -3,8 +3,10 @@ package etherdelta
 import (
 	"crypto/sha256"
 	"fmt"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/miguelmota/go-etherdelta/helpers"
 	"github.com/miguelmota/go-solidity-sha3"
 	"github.com/shopspring/decimal"
 	"math/big"
@@ -15,30 +17,18 @@ import (
 var userAddress = ""
 var privateKey = ""
 
-func TestGetTokenBalance(t *testing.T) {
-	t.Skip("Skipping GetTokenBalance")
-
-	// BAT token
-	tokenAddress := "0x0d8775f648430679a709e98d2b0cb6250d2887ef"
-
-	balance, err := GetTokenBalance(tokenAddress, userAddress)
-
-	if err != nil {
-		t.Errorf("Got error", err)
-	}
-
-	if balance.Cmp(big.NewInt(0)) != 1 {
-		t.Error("Expected balance to be greater than 0")
-	}
-}
-
 func TestGetOrderBook(t *testing.T) {
 	//t.Skip("Skipping GetOrderBook")
 
 	// BAT token
 	tokenAddress := "0x0d8775f648430679a709e98d2b0cb6250d2887ef"
 
-	orders, err := GetOrderBook(tokenAddress, userAddress)
+	getOrderBookOpts := &GetOrderBookOpts{
+		TokenAddress: tokenAddress,
+		UserAddress:  userAddress,
+	}
+
+	orders, err := GetOrderBook(getOrderBookOpts)
 
 	if err != nil {
 		t.Error(err)
@@ -58,11 +48,30 @@ func TestGetOrderBook(t *testing.T) {
 	//t.Log(orders)
 }
 
+func TestGetTokenTicker(t *testing.T) {
+	//t.Skip("Skipping GetTokenPrice")
+	getTokenTickerOpts := &GetTokenTickerOpts{
+		TokenSymbol: "UKG",
+	}
+
+	ticker, err := GetTokenTicker(getTokenTickerOpts)
+
+	if err != nil {
+		t.Errorf("Got err:", err)
+	}
+
+	if ticker.Last.LessThanOrEqual(decimal.NewFromFloat(0)) {
+		t.Errorf("Expected ticker last amount to be greater than 0, instead got %s", ticker.Last)
+	}
+}
+
 func TestGetTokenPrice(t *testing.T) {
 	//t.Skip("Skipping GetTokenPrice")
-	tokenSymbol := "UKG"
+	getTokenPriceOpts := &GetTokenPriceOpts{
+		TokenSymbol: "UKG",
+	}
 
-	price, err := GetTokenPrice(tokenSymbol)
+	price, err := GetTokenPrice(getTokenPriceOpts)
 
 	if err != nil {
 		t.Errorf("Got err:", err)
@@ -73,18 +82,57 @@ func TestGetTokenPrice(t *testing.T) {
 	}
 }
 
-func TestGetTokenTicker(t *testing.T) {
-	//t.Skip("Skipping GetTokenPrice")
-	tokenSymbol := "UKG"
-	ticker, err := GetTokenTicker(tokenSymbol)
+func TestGetTokenBalance(t *testing.T) {
+	t.Skip("Skipping GetTokenBalance")
+
+	// BAT token
+	tokenAddress := "0x0d8775f648430679a709e98d2b0cb6250d2887ef"
+
+	getTokenBalanceOpts := &GetTokenBalanceOpts{
+		TokenAddress: tokenAddress,
+		UserAddress:  userAddress,
+	}
+
+	balance, err := GetTokenBalance(getTokenBalanceOpts)
 
 	if err != nil {
-		t.Errorf("Got err:", err)
+		t.Errorf("Got error", err)
 	}
 
-	if ticker.Last.LessThanOrEqual(decimal.NewFromFloat(0)) {
-		t.Errorf("Expected ticker last amount to be greater than 0, instead got %s", ticker.Last)
+	if balance.Cmp(big.NewInt(0)) != 1 {
+		t.Error("Expected balance to be greater than 0")
 	}
+}
+
+func TestPostOrder(t *testing.T) {
+	// BAT token
+	tokenAddress := "0x0d8775f648430679a709e98d2b0cb6250d2887ef"
+
+	postOrderOpts := &PostOrderOpts{
+		TokenAddress: tokenAddress,
+		UserAddress:  userAddress,
+		Order: &OrderPost{
+			AmountGet:       "400000000000000000000",
+			AmountGive:      "120000000000000000",
+			TokenGet:        "0x0d8775f648430679a709e98d2b0cb6250d2887ef",
+			TokenGive:       "0x0000000000000000000000000000000000000000",
+			ContractAddress: "0x8d12a197cb00d4747a1fe03395095ce2a5cc6819",
+			Expires:         4729364,
+			Nonce:           3747305518,
+			User:            "0x5dbaD7F0D53934887C5D48ADE7a7bD5D7292a265",
+			V:               27,
+			R:               "0xd4c91f068099e1a39f458c02a1d30e4a0d4b7f4cc7b2097d09cc94d2c3afab30",
+			S:               "0x6662a815783a93b24cdad22d8a55fa3d9f4bce496fb1d66644fdbaa9a3ae9060",
+		},
+	}
+
+	result, err := PostOrder(postOrderOpts)
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	_ = result
 }
 
 func TestMakerOder(t *testing.T) {
@@ -97,10 +145,22 @@ func TestMakerOder(t *testing.T) {
 	amount := decimal.NewFromFloat(300)
 	ethCost := decimal.NewFromFloat(300 * 0.0003) // total tokens * price per token
 
-	err := MakeOrder(tokenAddress, &amount, userAddress, &ethCost, privateKey)
+	makeOrderOpts := &MakeOrderOpts{
+		PrivateKey:   privateKey,
+		TokenAddress: tokenAddress,
+		UserAddress:  userAddress,
+		Amount:       &amount,
+		EthCost:      &ethCost,
+	}
+
+	result, err := MakeOrder(makeOrderOpts)
 
 	if err != nil {
 		t.Errorf("Got error", err)
+	}
+
+	if result == "" {
+		t.Error("Expected non-empty result")
 	}
 }
 
@@ -122,10 +182,19 @@ func TestCancelOrder(t *testing.T) {
 		S:               "0x6662a815783a93b24cdad22d8a55fa3d9f4bce496fb1d66644fdbaa9a3ae9060",
 	}
 
-	err := CancelOrder(order, privateKey)
+	cancelOrderOpts := &CancelOrderOpts{
+		PrivateKey: privateKey,
+		Order:      order,
+	}
+
+	txHash, err := CancelOrder(cancelOrderOpts)
 
 	if err != nil {
 		t.Error(err)
+	}
+
+	if string(txHash) == "" {
+		t.Error("Expected txHash to not be empty")
 	}
 }
 
@@ -139,7 +208,12 @@ func TestMakeTrade(t *testing.T) {
 
 	userAddress := "" // get all orders
 
-	orders, err := GetOrderBook(tokenAddress, userAddress)
+	getOrderBookOpts := &GetOrderBookOpts{
+		TokenAddress: tokenAddress,
+		UserAddress:  userAddress,
+	}
+
+	orders, err := GetOrderBook(getOrderBookOpts)
 
 	if err != nil {
 		t.Error(err)
@@ -179,21 +253,62 @@ func TestMakeTrade(t *testing.T) {
 
 	tokenAmountInWei := big.NewInt(0)
 
-	err = MakeTrade(orderPost, tokenAmountInWei, privateKey)
+	key, err := crypto.HexToECDSA(privateKey)
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	auth := *bind.NewKeyedTransactor(key)
+	auth.GasLimit = big.NewInt(210000)      // units
+	auth.GasPrice = big.NewInt(35000000000) // wei
+	auth.Value = big.NewInt(0)
+
+	makeTradeOpts := &MakeTradeOpts{
+		Auth:    &auth,
+		Order:   orderPost,
+		EthCost: tokenAmountInWei,
+	}
+
+	txHash, err := MakeTrade(makeTradeOpts)
 
 	if err != nil {
 		t.Errorf("Trade failed, got error", err)
+	}
+
+	if string(txHash) == "" {
+		t.Error("Expected txHash to not be empty")
 	}
 }
 
 func TestDepositEth(t *testing.T) {
 	t.Skip("Skipping DepositEth")
-	amount := decimal.NewFromFloat(0.02)
 
-	err := DepositEth(amount, privateKey)
+	key, err := crypto.HexToECDSA(privateKey)
 
 	if err != nil {
 		t.Error(err)
+	}
+
+	auth := *bind.NewKeyedTransactor(key)
+
+	auth.GasLimit = big.NewInt(210000)      // units
+	auth.GasPrice = big.NewInt(35000000000) // wei
+	amountInEth := decimal.NewFromFloat(0.02)
+	auth.Value = helpers.EthToWei(&amountInEth)
+
+	depositEthOpts := &DepositEthOpts{
+		Auth: &auth,
+	}
+
+	txHash, err := DepositEth(depositEthOpts)
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	if string(txHash) == "" {
+		t.Error("Expected txHash to not be empty")
 	}
 }
 
@@ -203,16 +318,81 @@ func TestWithdrawToken(t *testing.T) {
 
 	// UKG
 	tokenAddress := "0x24692791bc444c5cd0b81e3cbcaba4b04acd1f3b"
-	tokenAmount, err := GetTokenBalance(tokenAddress, userAddress)
+
+	getTokenBalanceOpts := &GetTokenBalanceOpts{
+		TokenAddress: tokenAddress,
+		UserAddress:  userAddress,
+	}
+
+	tokenAmount, err := GetTokenBalance(getTokenBalanceOpts)
 
 	if err != nil {
 		t.Errorf("Error getting token balance, got %s", err)
 	}
 
-	err = WithdrawToken(tokenAddress, tokenAmount, privateKey)
+	key, err := crypto.HexToECDSA(privateKey)
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	auth := *bind.NewKeyedTransactor(key)
+	auth.GasLimit = big.NewInt(210000)      // units
+	auth.GasPrice = big.NewInt(35000000000) // wei
+	auth.Value = big.NewInt(0)
+
+	withdrawTokenOpts := &WithdrawTokenOpts{
+		Auth:         &auth,
+		TokenAddress: tokenAddress,
+		TokenAmount:  tokenAmount,
+	}
+
+	txHash, err := WithdrawToken(withdrawTokenOpts)
 
 	if err != nil {
 		t.Errorf("Error withrawing token, got %s", err)
+	}
+
+	if string(txHash) == "" {
+		t.Error("Expected txHash to not be empty")
+	}
+}
+
+func TestGetTickerApi(t *testing.T) {
+	t.Skip()
+	result, err := GetTickerApi()
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	if result == "" {
+		t.Error("Expected JSON, got empty string")
+	}
+}
+
+func TestParseStringExpNotation(t *testing.T) {
+	t.Skip("Skipping ParseExpNotation")
+
+	{
+		str := "2.8e+21"
+
+		got := ParseStringExpNotation(str)
+		expected := "2800000000000000000000"
+
+		if expected != got {
+			t.Errorf("Expected %s, got %s", expected, got)
+		}
+	}
+	{
+		str := "2.61-06"
+
+		got := ParseStringExpNotation(str)
+		expected := "0.00000261"
+
+		if expected != got {
+			t.Errorf("Expected %s, got %s", expected, got)
+		}
 	}
 }
 
@@ -338,39 +518,5 @@ func TestSignature(t *testing.T) {
 
 	if addr != recoveredAddr {
 		t.Fatalf("Address mismatch: want: %x have: %x", addr, recoveredAddr)
-	}
-}
-
-func TestGetTickerApi(t *testing.T) {
-	t.Skip()
-	err := GetTickerApi()
-
-	if err != nil {
-
-	}
-}
-
-func TestParseStringExpNotation(t *testing.T) {
-	t.Skip("Skipping ParseExpNotation")
-
-	{
-		str := "2.8e+21"
-
-		got := ParseStringExpNotation(str)
-		expected := "2800000000000000000000"
-
-		if expected != got {
-			t.Errorf("Expected %s, got %s", expected, got)
-		}
-	}
-	{
-		str := "2.61-06"
-
-		got := ParseStringExpNotation(str)
-		expected := "0.00000261"
-
-		if expected != got {
-			t.Errorf("Expected %s, got %s", expected, got)
-		}
 	}
 }
