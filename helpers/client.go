@@ -28,5 +28,5 @@ func init() {
 		panic(err)
 	}
 
-	log.Println("Connected to provider:", ETH_PROVIDER_URI)
+	log.Println("Connected EtherDelta contracts to provider:", ETH_PROVIDER_URI)
 }

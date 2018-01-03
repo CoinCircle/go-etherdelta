@@ -484,7 +484,7 @@ func MakeOrder(opts *MakeOrderOpts) (string, error) {
 		ContractAddress: etherDeltaContractAddress,
 		Expires:         expiresBlockNumber,
 		Nonce:           nonce,
-		User:            userAddress,
+		User:            opts.UserAddress,
 		V:               0,
 		R:               "",
 		S:               "",
@@ -532,7 +532,7 @@ func MakeOrder(opts *MakeOrderOpts) (string, error) {
 
 	pubKey := crypto.ToECDSAPub(recoveredPub)
 	recoveredAddr := crypto.PubkeyToAddress(*pubKey)
-	addr := common.HexToAddress(userAddress)
+	addr := common.HexToAddress(opts.UserAddress)
 
 	if addr != recoveredAddr {
 		return result, errors.New(fmt.Sprintf("Address mismatch: want: %x have: %x", addr, recoveredAddr))
