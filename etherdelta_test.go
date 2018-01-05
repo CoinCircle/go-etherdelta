@@ -359,6 +359,7 @@ func TestWithdrawToken(t *testing.T) {
 	}
 }
 
+/*
 func TestGetTickerApi(t *testing.T) {
 	t.Skip()
 	result, err := GetTickerApi()
@@ -371,6 +372,7 @@ func TestGetTickerApi(t *testing.T) {
 		t.Error("Expected JSON, got empty string")
 	}
 }
+*/
 
 func TestParseStringExpNotation(t *testing.T) {
 	t.Skip("Skipping ParseExpNotation")
