@@ -141,9 +141,9 @@ type wsEmitBody struct {
 	Order *OrderPost `json:"-"` // omit
 }
 
-type message interface{}
+type wsMessage interface{}
 
 type wsResponse struct {
-	Message Message
+	Message wsMessage
 	Error   error
 }

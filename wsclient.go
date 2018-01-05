@@ -67,7 +67,7 @@ func (client wsClient) EmitListenOnceAndClose(topic string, requestBody *wsEmitB
 	expired := false
 
 	go func() {
-		err := client.client.On(topic, func(h *gosocketio.Channel, message Message) {
+		err := client.client.On(topic, func(h *gosocketio.Channel, message wsMessage) {
 			log.Printf(`Got websocket data for "%s" topic`, topic)
 			//log.Println(message)
 
