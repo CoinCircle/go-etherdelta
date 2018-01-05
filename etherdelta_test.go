@@ -261,7 +261,7 @@ func TestMakeTrade(t *testing.T) {
 	}
 
 	auth := *bind.NewKeyedTransactor(key)
-	auth.GasLimit = big.NewInt(210000)      // units
+	auth.GasLimit = uint64(210000)          // units
 	auth.GasPrice = big.NewInt(35000000000) // wei
 	auth.Value = big.NewInt(0)
 
