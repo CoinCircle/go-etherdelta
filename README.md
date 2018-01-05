@@ -2,7 +2,7 @@
 
 > [EtherDelta](https://etherdelta.com/) client for [Golang](https://golang.org/).
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/miguelmota/go-etherdelta?)](https://goreportcard.com/report/github.com/miguelmota/go-etherdelta) [![GoDoc](https://godoc.org/github.com/miguelmota/go-etherdelta?status.svg)](https://godoc.org/github.com/miguelmota/go-etherdelta)
+[![License](http://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/miguelmota/go-etherdelta/master/LICENSE.md) [![Go Report Card](https://goreportcard.com/badge/github.com/miguelmota/go-etherdelta?)](https://goreportcard.com/report/github.com/miguelmota/go-etherdelta) [![GoDoc](https://godoc.org/github.com/miguelmota/go-etherdelta?status.svg)](https://godoc.org/github.com/miguelmota/go-etherdelta)
 
 ## Documentation
 
