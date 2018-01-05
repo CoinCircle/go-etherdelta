@@ -3,15 +3,16 @@ package etherdelta
 import (
 	"crypto/sha256"
 	"fmt"
+	"math/big"
+	"strconv"
+	"testing"
+
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/miguelmota/go-etherdelta/helpers"
 	"github.com/miguelmota/go-solidity-sha3"
 	"github.com/shopspring/decimal"
-	"math/big"
-	"strconv"
-	"testing"
 )
 
 var userAddress = ""
@@ -38,11 +39,11 @@ func TestGetOrderBook(t *testing.T) {
 	sellsSize := len(orders.Sells)
 
 	if buysSize <= 0 {
-		t.Errorf("Expected Buys size to be bigger than 0, got %s", buysSize)
+		t.Errorf("Expected Buys size to be bigger than 0, got %v", buysSize)
 	}
 
 	if sellsSize <= 0 {
-		t.Errorf("Expected Sells size to be bigger than 0, got %s", sellsSize)
+		t.Errorf("Expected Sells size to be bigger than 0, got %v", sellsSize)
 	}
 
 	//t.Log(orders)
@@ -57,7 +58,7 @@ func TestGetTokenTicker(t *testing.T) {
 	ticker, err := GetTokenTicker(getTokenTickerOpts)
 
 	if err != nil {
-		t.Errorf("Got err:", err)
+		t.Errorf("Got err: %s", err)
 	}
 
 	if ticker.Last.LessThanOrEqual(decimal.NewFromFloat(0)) {
@@ -74,7 +75,7 @@ func TestGetTokenPrice(t *testing.T) {
 	price, err := GetTokenPrice(getTokenPriceOpts)
 
 	if err != nil {
-		t.Errorf("Got err:", err)
+		t.Errorf("Got err: %s", err)
 	}
 
 	if price.LessThanOrEqual(decimal.NewFromFloat(0)) {
@@ -96,7 +97,7 @@ func TestGetTokenBalance(t *testing.T) {
 	balance, err := GetTokenBalance(getTokenBalanceOpts)
 
 	if err != nil {
-		t.Errorf("Got error", err)
+		t.Errorf("Got error: %s", err)
 	}
 
 	if balance.Cmp(big.NewInt(0)) != 1 {
@@ -156,7 +157,7 @@ func TestMakerOder(t *testing.T) {
 	result, err := MakeOrder(makeOrderOpts)
 
 	if err != nil {
-		t.Errorf("Got error", err)
+		t.Errorf("Got error: %s", err)
 	}
 
 	if result == "" {
@@ -273,7 +274,7 @@ func TestMakeTrade(t *testing.T) {
 	txHash, err := MakeTrade(makeTradeOpts)
 
 	if err != nil {
-		t.Errorf("Trade failed, got error", err)
+		t.Errorf("Trade failed, got error: %s", err)
 	}
 
 	if string(txHash) == "" {
@@ -503,7 +504,7 @@ func TestSignature(t *testing.T) {
 	}
 
 	if expected_V != V {
-		t.Errorf("Expected %s, got %s", expected_V, V)
+		t.Errorf("Expected %v, got %v", expected_V, V)
 	}
 
 	recoveredPub, err := crypto.Ecrecover(msg, sig)

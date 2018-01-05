@@ -3,10 +3,11 @@ package etherdelta
 import (
 	"encoding/json"
 	"errors"
-	"github.com/graarh/golang-socketio"
-	"github.com/graarh/golang-socketio/transport"
 	"log"
 	"time"
+
+	"github.com/graarh/golang-socketio"
+	"github.com/graarh/golang-socketio/transport"
 )
 
 const ED_WS_URL = "wss://socket.etherdelta.com/socket.io/?EIO=3&transport=websocket"

@@ -6,6 +6,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"log"
+	"math/big"
+	"net/http"
+	"regexp"
+	"strconv"
+	"time"
+
 	"github.com/coocood/freecache"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
@@ -15,21 +23,16 @@ import (
 	"github.com/miguelmota/go-etherdelta/utils"
 	"github.com/miguelmota/go-solidity-sha3"
 	"github.com/shopspring/decimal"
-	"io/ioutil"
-	"log"
-	"math/big"
-	"net/http"
-	"regexp"
-	"strconv"
-	"time"
 )
 
+// Export EtherDelta contract instance
 var EDInstance *contracts.EtherDelta
 var etherDeltaContractAddress = "0x8d12a197cb00d4747a1fe03395095ce2a5cc6819"
 var httpClient = &http.Client{Timeout: 10 * time.Second}
 var maxTries = 3
 var cache *freecache.Cache
 
+// Get the Order Book
 func GetOrderBook(opts *GetOrderBookOpts) (*OrderBook, error) {
 	log.Printf("Attempting websocket connection to get order book")
 
@@ -58,7 +61,7 @@ func GetOrderBook(opts *GetOrderBookOpts) (*OrderBook, error) {
 			ListenTopic: "market",
 		}
 
-		result, err := MakeWSRequest(wsrequest)
+		result, err := makeWSRequest(wsrequest)
 
 		if err != nil {
 			tries = tries + 1
@@ -66,6 +69,12 @@ func GetOrderBook(opts *GetOrderBookOpts) (*OrderBook, error) {
 		}
 
 		jsonStr, err := json.Marshal(result)
+
+		if err != nil {
+			tries = tries + 1
+			continue
+		}
+
 		reader := bytes.NewReader(jsonStr)
 		json.NewDecoder(reader).Decode(&target)
 
@@ -214,6 +223,7 @@ func GetOrderBook(opts *GetOrderBookOpts) (*OrderBook, error) {
 	return &orderBook, nil
 }
 
+// Get ticker info for token
 func GetTokenTicker(opts *GetTokenTickerOpts) (*TokenTicker, error) {
 	log.Printf("Attempting websocket connection to get token ticker")
 
@@ -239,7 +249,7 @@ func GetTokenTicker(opts *GetTokenTickerOpts) (*TokenTicker, error) {
 			ListenTopic: "market",
 		}
 
-		result, err := MakeWSRequest(wsrequest)
+		result, err := makeWSRequest(wsrequest)
 
 		if err != nil {
 			tries = tries + 1
@@ -247,6 +257,12 @@ func GetTokenTicker(opts *GetTokenTickerOpts) (*TokenTicker, error) {
 		}
 
 		jsonStr, err := json.Marshal(result)
+
+		if err != nil {
+			tries = tries + 1
+			continue
+		}
+
 		reader := bytes.NewReader(jsonStr)
 		json.NewDecoder(reader).Decode(&target)
 
@@ -372,6 +388,7 @@ func GetTokenTicker(opts *GetTokenTickerOpts) (*TokenTicker, error) {
 	return tokenTicker, nil
 }
 
+// Get last trade price for token
 func GetTokenPrice(opts *GetTokenPriceOpts) (*decimal.Decimal, error) {
 	var price decimal.Decimal
 
@@ -382,7 +399,7 @@ func GetTokenPrice(opts *GetTokenPriceOpts) (*decimal.Decimal, error) {
 		price, err = decimal.NewFromString(string(cached))
 
 		if err == nil {
-			log.Println("Returning cached price for %s: %s", opts.TokenSymbol, price)
+			log.Printf("Returning cached price for %s: %s", opts.TokenSymbol, price)
 			return &price, nil
 		}
 	}
@@ -404,6 +421,7 @@ func GetTokenPrice(opts *GetTokenPriceOpts) (*decimal.Decimal, error) {
 	return &price, nil
 }
 
+// Get token balance on EtherDelta for account
 func GetTokenBalance(opts *GetTokenBalanceOpts) (*big.Int, error) {
 	var (
 		err               error
@@ -419,6 +437,7 @@ func GetTokenBalance(opts *GetTokenBalanceOpts) (*big.Int, error) {
 	return etherDeltaBalance, nil
 }
 
+// Post an order to EtherDelta
 func PostOrder(opts *PostOrderOpts) (string, error) {
 	wsrequest := &WSRequest{
 		EmitTopic: "message",
@@ -430,7 +449,7 @@ func PostOrder(opts *PostOrderOpts) (string, error) {
 		ListenTopic: "messageResult",
 	}
 
-	postResponse, err := MakeWSRequest(wsrequest)
+	postResponse, err := makeWSRequest(wsrequest)
 	result := ""
 
 	if err != nil {
@@ -450,6 +469,7 @@ func PostOrder(opts *PostOrderOpts) (string, error) {
 	return result, nil
 }
 
+// Generate an order and post it to EtherDelta
 func MakeOrder(opts *MakeOrderOpts) (string, error) {
 	var result string
 	decimals, err := helpers.GetTokenDecimals(opts.TokenAddress)
@@ -555,6 +575,7 @@ func MakeOrder(opts *MakeOrderOpts) (string, error) {
 	return result, nil
 }
 
+// Cancel an order on EtherDelta
 func CancelOrder(opts *CancelOrderOpts) ([]byte, error) {
 	var txHash []byte
 	order := opts.Order
@@ -602,6 +623,7 @@ func CancelOrder(opts *CancelOrderOpts) ([]byte, error) {
 	return txHash, err
 }
 
+// Make an order trade on EtherDelta
 func MakeTrade(opts *MakeTradeOpts) ([]byte, error) {
 	var txHash []byte
 	order := opts.Order
@@ -674,6 +696,7 @@ func MakeTrade(opts *MakeTradeOpts) ([]byte, error) {
 	return txHash, err
 }
 
+// Deposit ETH to EtherDelta
 func DepositEth(opts *DepositEthOpts) ([]byte, error) {
 	var txHash []byte
 
@@ -690,6 +713,7 @@ func DepositEth(opts *DepositEthOpts) ([]byte, error) {
 	return txHash, nil
 }
 
+// Withdraw token from EtherDelta
 func WithdrawToken(opts *WithdrawTokenOpts) ([]byte, error) {
 	var txHash []byte
 	tx, err := EDInstance.WithdrawToken(
@@ -709,6 +733,7 @@ func WithdrawToken(opts *WithdrawTokenOpts) ([]byte, error) {
 	return txHash, nil
 }
 
+// Make a JSON request
 func GetJson(url string) (string, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	req.Header.Add("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_0) AppleWebKit/534.24 (KHTML, like Gecko) Chrome/11.0.696.0 Safari/534.24")
@@ -724,14 +749,14 @@ func GetJson(url string) (string, error) {
 	return bodyString, err
 }
 
-func GetTickerApi() (string, error) {
+func getTickerApi() (string, error) {
 	url := "https://api.etherdelta.com/returnTicker"
 	jsonStr, err := GetJson(url)
 
 	return jsonStr, err
 }
 
-func MakeWSRequest(wsrequest *WSRequest) (interface{}, error) {
+func makeWSRequest(wsrequest *WSRequest) (interface{}, error) {
 	isConnected := make(chan bool, 1)
 	client := NewWSClient(isConnected)
 

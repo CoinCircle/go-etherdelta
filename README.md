@@ -2,6 +2,8 @@
 
 > [EtherDelta](https://etherdelta.com/) client for [Golang](https://golang.org/).
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/miguelmota/go-etherdelta)](https://goreportcard.com/report/github.com/miguelmota/go-etherdelta) [![GoDoc](https://godoc.org/github.com/miguelmota/go-etherdelta?status.svg)](https://godoc.org/github.com/miguelmota/go-etherdelta)
+
 ## Documentation
 
 [https://godoc.org/github.com/miguelmota/go-etherdelta](https://godoc.org/github.com/miguelmota/go-etherdelta)

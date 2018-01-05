@@ -1,10 +1,11 @@
 package etherdelta
 
 import (
+	"math/big"
+
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/graarh/golang-socketio"
 	"github.com/shopspring/decimal"
-	"math/big"
 )
 
 type OrderBook struct {

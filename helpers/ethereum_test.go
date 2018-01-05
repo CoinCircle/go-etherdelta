@@ -2,9 +2,10 @@ package helpers
 
 import (
 	"encoding/hex"
-	"github.com/shopspring/decimal"
 	"math/big"
 	"testing"
+
+	"github.com/shopspring/decimal"
 )
 
 func TestGetTokenDecimals(t *testing.T) {
