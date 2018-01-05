@@ -293,7 +293,7 @@ func TestDepositEth(t *testing.T) {
 
 	auth := *bind.NewKeyedTransactor(key)
 
-	auth.GasLimit = big.NewInt(210000)      // units
+	auth.GasLimit = uint64(210000)          // units
 	auth.GasPrice = big.NewInt(35000000000) // wei
 	amountInEth := decimal.NewFromFloat(0.02)
 	auth.Value = helpers.EthToWei(&amountInEth)
@@ -338,7 +338,7 @@ func TestWithdrawToken(t *testing.T) {
 	}
 
 	auth := *bind.NewKeyedTransactor(key)
-	auth.GasLimit = big.NewInt(210000)      // units
+	auth.GasLimit = uint64(210000)          // units
 	auth.GasPrice = big.NewInt(35000000000) // wei
 	auth.Value = big.NewInt(0)
 
