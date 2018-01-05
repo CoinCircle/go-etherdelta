@@ -131,7 +131,7 @@ type wsClient struct {
 
 type wsRequest struct {
 	EmitTopic   string      `json:"emitTopic"`
-	EmitBody    *WSEmitBody `json:"emitBody"`
+	EmitBody    *wsEmitBody `json:"emitBody"`
 	ListenTopic string      `json:"listenTopic"`
 }
 
