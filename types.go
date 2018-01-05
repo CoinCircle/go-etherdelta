@@ -8,11 +8,13 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+// OrderBook Order Book struct
 type OrderBook struct {
 	Buys  []Order `json:"buys"`
 	Sells []Order `json:"sells"`
 }
 
+// Order Individual order struct
 type Order struct {
 	Id                  string `json:"id"`
 	Amount              string `json:"amount"`
@@ -34,6 +36,7 @@ type Order struct {
 	AmountFilled        string `json:"amountFilled"`
 }
 
+// OrderPost Order struct for posting a new order to EtherDelta
 type OrderPost struct {
 	AmountGet       string `json:"amountGet"`
 	AmountGive      string `json:"amountGive"`
@@ -48,6 +51,7 @@ type OrderPost struct {
 	S               string `json:"s"`
 }
 
+// TokenTicker Ticker infor for token
 type TokenTicker struct {
 	Ask           *decimal.Decimal `json:"ask"`
 	BaseVolume    *decimal.Decimal `json:"baseVolume"`
@@ -58,30 +62,36 @@ type TokenTicker struct {
 	TokenAddress  string           `json:"tokenAddr"`
 }
 
+// GetOrderBookOpts Options for getting order book
 type GetOrderBookOpts struct {
 	TokenAddress string
 	UserAddress  string
 }
 
+// GetTokenTickerOpts Options for getting token ticker
 type GetTokenTickerOpts struct {
 	TokenSymbol string
 }
 
+// GetTokenPriceOpts Options for getting token price
 type GetTokenPriceOpts struct {
 	TokenSymbol string
 }
 
+// GetTokenBalanceOpts Options for getting token balance
 type GetTokenBalanceOpts struct {
 	TokenAddress string
 	UserAddress  string
 }
 
+// PostOrderOpts Options for posting an order
 type PostOrderOpts struct {
 	Order        *OrderPost
 	TokenAddress string
 	UserAddress  string
 }
 
+// MakeOrderOpts Options for making an order
 type MakeOrderOpts struct {
 	PrivateKey   string
 	TokenAddress string
@@ -90,46 +100,50 @@ type MakeOrderOpts struct {
 	EthCost      *decimal.Decimal
 }
 
+// CancelOrderOpts Options for cancelling an order
 type CancelOrderOpts struct {
 	PrivateKey string
 	Order      *OrderPost
 }
 
+// MakeTrade Options for making a trade
 type MakeTradeOpts struct {
 	Auth    *bind.TransactOpts
 	Order   *OrderPost
 	EthCost *big.Int
 }
 
+// DepositEthOpts Options for depositing ETH
 type DepositEthOpts struct {
 	Auth *bind.TransactOpts
 }
 
+// WithdrawTokenOpts Options for withdrawing token
 type WithdrawTokenOpts struct {
 	Auth         *bind.TransactOpts
 	TokenAddress string
 	TokenAmount  *big.Int
 }
 
-type WSClient struct {
+type wsClient struct {
 	client *gosocketio.Client
 }
 
-type WSRequest struct {
+type wsRequest struct {
 	EmitTopic   string      `json:"emitTopic"`
 	EmitBody    *WSEmitBody `json:"emitBody"`
 	ListenTopic string      `json:"listenTopic"`
 }
 
-type WSEmitBody struct {
+type wsEmitBody struct {
 	Token string     `json:"token"`
 	User  string     `json:"user"`
 	Order *OrderPost `json:"-"` // omit
 }
 
-type Message interface{}
+type message interface{}
 
-type WSResponse struct {
+type wsResponse struct {
 	Message Message
 	Error   error
 }

@@ -15,7 +15,7 @@ func TestGetTokenDecimals(t *testing.T) {
 	decimals, err := GetTokenDecimals(tokenAddress)
 
 	if err != nil {
-		t.Errorf("Got error", err)
+		t.Errorf("Got error: %s", err)
 	}
 
 	expected := big.NewInt(18)
@@ -29,7 +29,7 @@ func TestGetLastestBlockNumber(t *testing.T) {
 	blockNumber, err := GetLatestBlockNumber()
 
 	if err != nil {
-		t.Errorf("Got error", err)
+		t.Errorf("Got error: %s", err)
 	}
 
 	if blockNumber.Cmp(big.NewInt(4000000)) != 1 {
@@ -59,7 +59,7 @@ func TestGetSigRSV(t *testing.T) {
 	}
 
 	if expected_V != rsv.V {
-		t.Errorf("Expected %s, got %s", expected_V, rsv.V)
+		t.Errorf("Expected %v, got %v", expected_V, rsv.V)
 	}
 }
 

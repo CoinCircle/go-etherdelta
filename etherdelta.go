@@ -25,14 +25,14 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-// Export EtherDelta contract instance
+// EDInstance Export EtherDelta contract instance
 var EDInstance *contracts.EtherDelta
 var etherDeltaContractAddress = "0x8d12a197cb00d4747a1fe03395095ce2a5cc6819"
 var httpClient = &http.Client{Timeout: 10 * time.Second}
 var maxTries = 3
 var cache *freecache.Cache
 
-// Get the Order Book
+// GetOrderBook Get the Order Book
 func GetOrderBook(opts *GetOrderBookOpts) (*OrderBook, error) {
 	log.Printf("Attempting websocket connection to get order book")
 
@@ -52,9 +52,9 @@ func GetOrderBook(opts *GetOrderBookOpts) (*OrderBook, error) {
 			log.Printf("Try #%v", tries+1)
 		}
 
-		wsrequest := &WSRequest{
+		wsrequest := &wsRequest{
 			EmitTopic: "getMarket",
-			EmitBody: &WSEmitBody{
+			EmitBody: &wsEmitBody{
 				Token: opts.TokenAddress,
 				User:  opts.UserAddress,
 			},
@@ -100,7 +100,7 @@ func GetOrderBook(opts *GetOrderBookOpts) (*OrderBook, error) {
 		allOrders := target["orders"].(map[string]interface{})
 		ordersTypeArray := allOrders[orderType].([]interface{})
 
-		for i, _ := range ordersTypeArray {
+		for i := range ordersTypeArray {
 			orderJson := ordersTypeArray[i].(map[string]interface{})
 			order := Order{}
 
@@ -223,7 +223,7 @@ func GetOrderBook(opts *GetOrderBookOpts) (*OrderBook, error) {
 	return &orderBook, nil
 }
 
-// Get ticker info for token
+// GetTokenTicker Get ticker info for token
 func GetTokenTicker(opts *GetTokenTickerOpts) (*TokenTicker, error) {
 	log.Printf("Attempting websocket connection to get token ticker")
 
@@ -240,9 +240,9 @@ func GetTokenTicker(opts *GetTokenTickerOpts) (*TokenTicker, error) {
 			log.Printf("Try #%v", tries+1)
 		}
 
-		wsrequest := &WSRequest{
+		wsrequest := &wsRequest{
 			EmitTopic: "getMarket",
-			EmitBody: &WSEmitBody{
+			EmitBody: &wsEmitBody{
 				Token: "",
 				User:  "",
 			},
@@ -388,7 +388,7 @@ func GetTokenTicker(opts *GetTokenTickerOpts) (*TokenTicker, error) {
 	return tokenTicker, nil
 }
 
-// Get last trade price for token
+// GetTokenPrice Get last trade price for token
 func GetTokenPrice(opts *GetTokenPriceOpts) (*decimal.Decimal, error) {
 	var price decimal.Decimal
 
@@ -421,7 +421,7 @@ func GetTokenPrice(opts *GetTokenPriceOpts) (*decimal.Decimal, error) {
 	return &price, nil
 }
 
-// Get token balance on EtherDelta for account
+// GetTokenBalance Get token balance on EtherDelta for account
 func GetTokenBalance(opts *GetTokenBalanceOpts) (*big.Int, error) {
 	var (
 		err               error
@@ -437,11 +437,11 @@ func GetTokenBalance(opts *GetTokenBalanceOpts) (*big.Int, error) {
 	return etherDeltaBalance, nil
 }
 
-// Post an order to EtherDelta
+// PostOrder Post an order to EtherDelta
 func PostOrder(opts *PostOrderOpts) (string, error) {
-	wsrequest := &WSRequest{
+	wsrequest := &wsRequest{
 		EmitTopic: "message",
-		EmitBody: &WSEmitBody{
+		EmitBody: &wsEmitBody{
 			Token: opts.TokenAddress,
 			User:  opts.UserAddress,
 			Order: opts.Order,
@@ -469,7 +469,7 @@ func PostOrder(opts *PostOrderOpts) (string, error) {
 	return result, nil
 }
 
-// Generate an order and post it to EtherDelta
+// MakeOrder Generate an order and post it to EtherDelta
 func MakeOrder(opts *MakeOrderOpts) (string, error) {
 	var result string
 	decimals, err := helpers.GetTokenDecimals(opts.TokenAddress)
@@ -535,7 +535,7 @@ func MakeOrder(opts *MakeOrderOpts) (string, error) {
 	sig, err := crypto.Sign(msg, key)
 
 	if err != nil {
-		return result, errors.New(fmt.Sprintf("Sign error: %s", err))
+		return result, fmt.Errorf("Sign error: %s", err)
 	}
 
 	rsv := helpers.GetSigRSV(sig)
@@ -547,7 +547,7 @@ func MakeOrder(opts *MakeOrderOpts) (string, error) {
 	recoveredPub, err := crypto.Ecrecover(msg, sig)
 
 	if err != nil {
-		return result, errors.New(fmt.Sprintf("ECRecover error: %s", err))
+		return result, fmt.Errorf("ECRecover error: %s", err)
 	}
 
 	pubKey := crypto.ToECDSAPub(recoveredPub)
@@ -555,7 +555,7 @@ func MakeOrder(opts *MakeOrderOpts) (string, error) {
 	addr := common.HexToAddress(opts.UserAddress)
 
 	if addr != recoveredAddr {
-		return result, errors.New(fmt.Sprintf("Address mismatch: want: %x have: %x", addr, recoveredAddr))
+		return result, fmt.Errorf("Address mismatch: want: %x have: %x", addr, recoveredAddr)
 	}
 
 	postOrderOpts := &PostOrderOpts{
@@ -575,7 +575,7 @@ func MakeOrder(opts *MakeOrderOpts) (string, error) {
 	return result, nil
 }
 
-// Cancel an order on EtherDelta
+// CancelOrder Cancel an order on EtherDelta
 func CancelOrder(opts *CancelOrderOpts) ([]byte, error) {
 	var txHash []byte
 	order := opts.Order
@@ -623,7 +623,7 @@ func CancelOrder(opts *CancelOrderOpts) ([]byte, error) {
 	return txHash, err
 }
 
-// Make an order trade on EtherDelta
+// MakeTrade Make an order trade on EtherDelta
 func MakeTrade(opts *MakeTradeOpts) ([]byte, error) {
 	var txHash []byte
 	order := opts.Order
@@ -686,7 +686,7 @@ func MakeTrade(opts *MakeTradeOpts) ([]byte, error) {
 	)
 
 	if err != nil {
-		return txHash, errors.New(fmt.Sprintf("Trade failed, got error: %s", err))
+		return txHash, fmt.Errorf("Trade failed, got error: %s", err)
 	}
 
 	log.Printf("Made trade, got tx %s\n", tx)
@@ -696,7 +696,7 @@ func MakeTrade(opts *MakeTradeOpts) ([]byte, error) {
 	return txHash, err
 }
 
-// Deposit ETH to EtherDelta
+// DepositEth Deposit ETH to EtherDelta
 func DepositEth(opts *DepositEthOpts) ([]byte, error) {
 	var txHash []byte
 
@@ -713,7 +713,7 @@ func DepositEth(opts *DepositEthOpts) ([]byte, error) {
 	return txHash, nil
 }
 
-// Withdraw token from EtherDelta
+// WithdrawToken Withdraw token from EtherDelta
 func WithdrawToken(opts *WithdrawTokenOpts) ([]byte, error) {
 	var txHash []byte
 	tx, err := EDInstance.WithdrawToken(
@@ -733,7 +733,7 @@ func WithdrawToken(opts *WithdrawTokenOpts) ([]byte, error) {
 	return txHash, nil
 }
 
-// Make a JSON request
+// GetJson Make a JSON request
 func GetJson(url string) (string, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	req.Header.Add("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_0) AppleWebKit/534.24 (KHTML, like Gecko) Chrome/11.0.696.0 Safari/534.24")
@@ -749,39 +749,7 @@ func GetJson(url string) (string, error) {
 	return bodyString, err
 }
 
-func getTickerApi() (string, error) {
-	url := "https://api.etherdelta.com/returnTicker"
-	jsonStr, err := GetJson(url)
-
-	return jsonStr, err
-}
-
-func makeWSRequest(wsrequest *WSRequest) (interface{}, error) {
-	isConnected := make(chan bool, 1)
-	client := NewWSClient(isConnected)
-
-	switch <-isConnected {
-	case false:
-		return nil, errors.New("Could not establish connection")
-	default:
-	}
-
-	message := make(chan *WSResponse)
-
-	client.EmitListenOnceAndClose(wsrequest.ListenTopic, wsrequest.EmitBody, message, wsrequest.EmitTopic)
-	result := <-message
-
-	if result.Error != nil {
-		return nil, result.Error
-	}
-
-	if result.Message == nil {
-		return nil, errors.New("Empty response from EtherDelta")
-	}
-
-	return result.Message, nil
-}
-
+// ParseStringExpNotation Parse string in exponential notation
 func ParseStringExpNotation(str string) string {
 	// etherdelta will return a string such as "2.8e+21" if the number is too big
 	{
@@ -818,6 +786,39 @@ func ParseStringExpNotation(str string) string {
 	}
 
 	return str
+}
+
+func getTickerApi() (string, error) {
+	url := "https://api.etherdelta.com/returnTicker"
+	jsonStr, err := GetJson(url)
+
+	return jsonStr, err
+}
+
+func makeWSRequest(wsrequest *wsRequest) (interface{}, error) {
+	isConnected := make(chan bool, 1)
+	client := newWSClient(isConnected)
+
+	switch <-isConnected {
+	case false:
+		return nil, errors.New("Could not establish connection")
+	default:
+	}
+
+	message := make(chan *wsResponse)
+
+	client.EmitListenOnceAndClose(wsrequest.ListenTopic, wsrequest.EmitBody, message, wsrequest.EmitTopic)
+	result := <-message
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	if result.Message == nil {
+		return nil, errors.New("Empty response from EtherDelta")
+	}
+
+	return result.Message, nil
 }
 
 func init() {

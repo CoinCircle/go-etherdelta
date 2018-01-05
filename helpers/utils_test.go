@@ -14,7 +14,7 @@ func TestIsValidAddress(t *testing.T) {
 		expected := true
 
 		if got != expected {
-			t.Errorf("Expected %s, got %s", expected, got)
+			t.Errorf("Expected %v, got %v", expected, got)
 		}
 	}
 
@@ -23,7 +23,7 @@ func TestIsValidAddress(t *testing.T) {
 		expected := false
 
 		if got != expected {
-			t.Errorf("Expected %s, got %s", expected, got)
+			t.Errorf("Expected %v, got %v", expected, got)
 		}
 	}
 
@@ -32,7 +32,7 @@ func TestIsValidAddress(t *testing.T) {
 		expected := false
 
 		if got != expected {
-			t.Errorf("Expected %s, got %s", expected, got)
+			t.Errorf("Expected %v, got %v", expected, got)
 		}
 	}
 }

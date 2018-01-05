@@ -10,15 +10,15 @@ import (
 	"github.com/graarh/golang-socketio/transport"
 )
 
-const ED_WS_URL = "wss://socket.etherdelta.com/socket.io/?EIO=3&transport=websocket"
+const etherDeltaWsUrl = "wss://socket.etherdelta.com/socket.io/?EIO=3&transport=websocket"
 
-func NewWSClient(isConnected chan bool) WSClient {
+func newWSClient(isConnected chan bool) wsClient {
 	sockclient, err := gosocketio.Dial(
-		ED_WS_URL,
+		etherDeltaWsUrl,
 		transport.GetDefaultWebsocketTransport(),
 	)
 
-	client := WSClient{
+	client := wsClient{
 		client: sockclient,
 	}
 
@@ -42,7 +42,7 @@ func NewWSClient(isConnected chan bool) WSClient {
 	return client
 }
 
-func (client WSClient) EmitRequest(topic string, requestBody *WSEmitBody) error {
+func (client wsClient) EmitRequest(topic string, requestBody *wsEmitBody) error {
 	message, err := json.Marshal(requestBody)
 
 	if err != nil {
@@ -62,8 +62,8 @@ func (client WSClient) EmitRequest(topic string, requestBody *WSEmitBody) error 
 	return nil
 }
 
-func (client WSClient) EmitListenOnceAndClose(topic string, requestBody *WSEmitBody, messageChan chan *WSResponse, emitTopic string) {
-	result := &WSResponse{}
+func (client wsClient) EmitListenOnceAndClose(topic string, requestBody *wsEmitBody, messageChan chan *wsResponse, emitTopic string) {
+	result := &wsResponse{}
 	expired := false
 
 	go func() {
@@ -121,7 +121,7 @@ func (client WSClient) EmitListenOnceAndClose(topic string, requestBody *WSEmitB
 	}()
 }
 
-func (client WSClient) PostOrder(order *OrderPost) error {
+func (client wsClient) PostOrder(order *OrderPost) error {
 	message, err := json.Marshal(order)
 
 	if err != nil {

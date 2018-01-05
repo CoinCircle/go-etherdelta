@@ -491,20 +491,20 @@ func TestSignature(t *testing.T) {
 	V, _ := strconv.Atoi(vStr)
 	V = V + 27
 
-	expected_R := "1f4ab7e26711f235331edc67bd697fd0c7628dd5ffcab333870640dee329914b"
-	expected_S := "2bce958fb3ee54817b1d5102e364a9164f46f732f4a02a9d5cd9569b085f2112"
-	expected_V := 27
+	expectedR := "1f4ab7e26711f235331edc67bd697fd0c7628dd5ffcab333870640dee329914b"
+	expectedS := "2bce958fb3ee54817b1d5102e364a9164f46f732f4a02a9d5cd9569b085f2112"
+	expectedV := 27
 
-	if expected_R != R {
-		t.Errorf("Expected %s, got %s", expected_R, R)
+	if expectedR != R {
+		t.Errorf("Expected %s, got %s", expectedR, R)
 	}
 
-	if expected_S != S {
-		t.Errorf("Expected %s, got %s", expected_S, S)
+	if expectedS != S {
+		t.Errorf("Expected %s, got %s", expectedS, S)
 	}
 
-	if expected_V != V {
-		t.Errorf("Expected %v, got %v", expected_V, V)
+	if expectedV != V {
+		t.Errorf("Expected %v, got %v", expectedV, V)
 	}
 
 	recoveredPub, err := crypto.Ecrecover(msg, sig)
