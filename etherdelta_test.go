@@ -52,13 +52,13 @@ func TestGetOrderBook(t *testing.T) {
 func TestGetTokenTicker(t *testing.T) {
 	//t.Skip("Skipping GetTokenPrice")
 	getTokenTickerOpts := &GetTokenTickerOpts{
-		TokenSymbol: "UKG",
+		TokenSymbol: "BAT",
 	}
 
 	ticker, err := GetTokenTicker(getTokenTickerOpts)
 
 	if err != nil {
-		t.Errorf("Got err: %s", err)
+		t.Errorf("%s", err)
 	}
 
 	if ticker.Last.LessThanOrEqual(decimal.NewFromFloat(0)) {
@@ -69,7 +69,7 @@ func TestGetTokenTicker(t *testing.T) {
 func TestGetTokenPrice(t *testing.T) {
 	//t.Skip("Skipping GetTokenPrice")
 	getTokenPriceOpts := &GetTokenPriceOpts{
-		TokenSymbol: "UKG",
+		TokenSymbol: "BAT",
 	}
 
 	price, err := GetTokenPrice(getTokenPriceOpts)
@@ -317,8 +317,8 @@ func TestWithdrawToken(t *testing.T) {
 	// disabled. enable when needing to test for reals
 	t.Skip("Skipping WithdrawToken")
 
-	// UKG
-	tokenAddress := "0x24692791bc444c5cd0b81e3cbcaba4b04acd1f3b"
+	// BAT
+	tokenAddress := "0x0d8775f648430679a709e98d2b0cb6250d2887ef"
 
 	getTokenBalanceOpts := &GetTokenBalanceOpts{
 		TokenAddress: tokenAddress,

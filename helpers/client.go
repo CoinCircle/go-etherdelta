@@ -1,8 +1,9 @@
 package helpers
 
 import (
-	"log"
 	"os"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/ethereum/go-ethereum/ethclient"
 )
@@ -29,5 +30,5 @@ func init() {
 		panic(err)
 	}
 
-	log.Println("Connected EtherDelta client to provider:", ETH_PROVIDER_URI)
+	log.Infof("Connected EtherDelta client to provider: %s", ETH_PROVIDER_URI)
 }

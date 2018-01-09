@@ -7,12 +7,13 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"math/big"
 	"net/http"
 	"regexp"
 	"strconv"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/coocood/freecache"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -34,7 +35,7 @@ var cache *freecache.Cache
 
 // GetOrderBook Get the Order Book
 func GetOrderBook(opts *GetOrderBookOpts) (*OrderBook, error) {
-	log.Printf("Attempting websocket connection to get order book")
+	log.Debug("Attempting websocket connection to get order book")
 
 	orderBook := OrderBook{
 		Buys:  []Order{},
@@ -44,12 +45,12 @@ func GetOrderBook(opts *GetOrderBookOpts) (*OrderBook, error) {
 	var target map[string]interface{}
 	tries := 0
 
-	log.Printf("Fetching EtherDelta orderbook for token %s", opts.TokenAddress)
+	log.Debug("Fetching EtherDelta orderbook for token %s", opts.TokenAddress)
 
 	// retry if error or null response
 	for tries < maxTries {
 		if tries > 0 {
-			log.Printf("Try #%v", tries+1)
+			log.Warnf("Try #%v", tries+1)
 		}
 
 		wsrequest := &wsRequest{
@@ -225,19 +226,19 @@ func GetOrderBook(opts *GetOrderBookOpts) (*OrderBook, error) {
 
 // GetTokenTicker Get ticker info for token
 func GetTokenTicker(opts *GetTokenTickerOpts) (*TokenTicker, error) {
-	log.Printf("Attempting websocket connection to get token ticker")
+	log.Debug("Attempting websocket connection to get token ticker")
 
 	tokenTicker := &TokenTicker{}
 
 	var target map[string]interface{}
 	tries := 0
 
-	log.Printf("Fetching EtherDelta ticker for token %s", opts.TokenSymbol)
+	log.Debugf("Fetching EtherDelta ticker for token %s", opts.TokenSymbol)
 
 	// retry if error or null response
 	for tries < maxTries {
 		if tries > 0 {
-			log.Printf("Try #%v", tries+1)
+			log.Warnf("Try #%v", tries+1)
 		}
 
 		wsrequest := &wsRequest{
@@ -399,7 +400,7 @@ func GetTokenPrice(opts *GetTokenPriceOpts) (*decimal.Decimal, error) {
 		price, err = decimal.NewFromString(string(cached))
 
 		if err == nil {
-			log.Printf("Returning cached price for %s: %s", opts.TokenSymbol, price)
+			log.Warnf("Returning cached price for %s: %s", opts.TokenSymbol, price)
 			return &price, nil
 		}
 	}
@@ -570,7 +571,7 @@ func MakeOrder(opts *MakeOrderOpts) (string, error) {
 		return result, err
 	}
 
-	log.Printf("Post order message response: %s\n", result)
+	log.Infof("Post order message response: %s", result)
 
 	return result, nil
 }
@@ -616,7 +617,7 @@ func CancelOrder(opts *CancelOrderOpts) ([]byte, error) {
 		S,
 	)
 
-	log.Println(tx)
+	log.Infof("CancelOrder TX: %s", tx)
 
 	txHash = tx.Hash().Bytes()
 
@@ -689,7 +690,7 @@ func MakeTrade(opts *MakeTradeOpts) ([]byte, error) {
 		return txHash, fmt.Errorf("Trade failed, got error: %s", err)
 	}
 
-	log.Printf("Made trade, got tx %s\n", tx)
+	log.Infof("MakeTrade TX: %s", tx)
 
 	txHash = tx.Hash().Bytes()
 
@@ -708,7 +709,7 @@ func DepositEth(opts *DepositEthOpts) ([]byte, error) {
 
 	txHash = tx.Hash().Bytes()
 
-	log.Printf("Deposited to EtherDelta %s", tx)
+	log.Infof("Deposited to EtherDelta, TX: %s", tx)
 
 	return txHash, nil
 }
@@ -728,7 +729,7 @@ func WithdrawToken(opts *WithdrawTokenOpts) ([]byte, error) {
 
 	txHash = tx.Hash().Bytes()
 
-	log.Printf("Withdrew tokens from EtherDelta %s", tx)
+	log.Infof("Withdrew tokens from EtherDelta, TX: %s", tx)
 
 	return txHash, nil
 }

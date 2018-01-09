@@ -3,8 +3,9 @@ package etherdelta
 import (
 	"encoding/json"
 	"errors"
-	"log"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/graarh/golang-socketio"
 	"github.com/graarh/golang-socketio/transport"
@@ -24,18 +25,18 @@ func newWSClient(isConnected chan bool) wsClient {
 
 	if err != nil {
 		isConnected <- false
-		log.Println("Error connecting to EtherDelta websocket URI:", err)
+		log.Errorf("Error connecting to EtherDelta websocket URI: %s", err)
 		return client
 	}
 
 	err = client.client.On(gosocketio.OnConnection, func(h *gosocketio.Channel) {
 		isConnected <- true
-		log.Println("Connected to EtherDelta websocket.")
+		log.Info("Connected to EtherDelta websocket.")
 	})
 
 	if err != nil {
 		isConnected <- false
-		log.Println(err)
+		log.Errorf("Connection error: %s", err)
 		return client
 	}
 
@@ -57,7 +58,7 @@ func (client wsClient) EmitRequest(topic string, requestBody *wsEmitBody) error 
 		return err
 	}
 
-	log.Printf("Emitted EtherDelta websocket request for \"%s\" topic with payload %s", topic, msg)
+	log.Debugf("Emitted EtherDelta websocket request for \"%s\" topic with payload %s", topic, msg)
 
 	return nil
 }
@@ -68,8 +69,8 @@ func (client wsClient) EmitListenOnceAndClose(topic string, requestBody *wsEmitB
 
 	go func() {
 		err := client.client.On(topic, func(h *gosocketio.Channel, message wsMessage) {
-			log.Printf(`Got websocket data for "%s" topic`, topic)
-			//log.Println(message)
+			log.Debugf(`Got websocket data for "%s" topic`, topic)
+			//log.Debug(message)
 
 			if !expired {
 				result.Message = message
@@ -137,7 +138,11 @@ func (client wsClient) PostOrder(order *OrderPost) error {
 		return err
 	}
 
-	log.Printf("Emitted EtherDelta websocket request for \"%s\" topic with order payload %s", topic, msg)
+	log.Debugf("Emitted EtherDelta websocket request for \"%s\" topic with order payload %s", topic, msg)
 
 	return nil
+}
+
+func init() {
+	log.SetLevel(log.DebugLevel)
 }
