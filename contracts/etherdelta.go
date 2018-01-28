@@ -7,10 +7,12 @@ import (
 	"math/big"
 	"strings"
 
+	ethereum "github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/event"
 )
 
 // EtherDeltaABI is the input ABI used to generate the binding from.
@@ -20,6 +22,7 @@ const EtherDeltaABI = "[{\"constant\":false,\"inputs\":[{\"name\":\"tokenGet\",\
 type EtherDelta struct {
 	EtherDeltaCaller     // Read-only binding to the contract
 	EtherDeltaTransactor // Write-only binding to the contract
+	EtherDeltaFilterer   // Log filterer for contract events
 }
 
 // EtherDeltaCaller is an auto generated read-only Go binding around an Ethereum contract.
@@ -29,6 +32,11 @@ type EtherDeltaCaller struct {
 
 // EtherDeltaTransactor is an auto generated write-only Go binding around an Ethereum contract.
 type EtherDeltaTransactor struct {
+	contract *bind.BoundContract // Generic contract wrapper for the low level calls
+}
+
+// EtherDeltaFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
+type EtherDeltaFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
@@ -71,16 +79,16 @@ type EtherDeltaTransactorRaw struct {
 
 // NewEtherDelta creates a new instance of EtherDelta, bound to a specific deployed contract.
 func NewEtherDelta(address common.Address, backend bind.ContractBackend) (*EtherDelta, error) {
-	contract, err := bindEtherDelta(address, backend, backend)
+	contract, err := bindEtherDelta(address, backend, backend, backend)
 	if err != nil {
 		return nil, err
 	}
-	return &EtherDelta{EtherDeltaCaller: EtherDeltaCaller{contract: contract}, EtherDeltaTransactor: EtherDeltaTransactor{contract: contract}}, nil
+	return &EtherDelta{EtherDeltaCaller: EtherDeltaCaller{contract: contract}, EtherDeltaTransactor: EtherDeltaTransactor{contract: contract}, EtherDeltaFilterer: EtherDeltaFilterer{contract: contract}}, nil
 }
 
 // NewEtherDeltaCaller creates a new read-only instance of EtherDelta, bound to a specific deployed contract.
 func NewEtherDeltaCaller(address common.Address, caller bind.ContractCaller) (*EtherDeltaCaller, error) {
-	contract, err := bindEtherDelta(address, caller, nil)
+	contract, err := bindEtherDelta(address, caller, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -89,20 +97,29 @@ func NewEtherDeltaCaller(address common.Address, caller bind.ContractCaller) (*E
 
 // NewEtherDeltaTransactor creates a new write-only instance of EtherDelta, bound to a specific deployed contract.
 func NewEtherDeltaTransactor(address common.Address, transactor bind.ContractTransactor) (*EtherDeltaTransactor, error) {
-	contract, err := bindEtherDelta(address, nil, transactor)
+	contract, err := bindEtherDelta(address, nil, transactor, nil)
 	if err != nil {
 		return nil, err
 	}
 	return &EtherDeltaTransactor{contract: contract}, nil
 }
 
+// NewEtherDeltaFilterer creates a new log filterer instance of EtherDelta, bound to a specific deployed contract.
+func NewEtherDeltaFilterer(address common.Address, filterer bind.ContractFilterer) (*EtherDeltaFilterer, error) {
+	contract, err := bindEtherDelta(address, nil, nil, filterer)
+	if err != nil {
+		return nil, err
+	}
+	return &EtherDeltaFilterer{contract: contract}, nil
+}
+
 // bindEtherDelta binds a generic wrapper to an already deployed contract.
-func bindEtherDelta(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor) (*bind.BoundContract, error) {
+func bindEtherDelta(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
 	parsed, err := abi.JSON(strings.NewReader(EtherDeltaABI))
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor), nil
+	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
 }
 
 // Call invokes the (constant) contract method with params as input values and
@@ -752,4 +769,640 @@ func (_EtherDelta *EtherDeltaSession) WithdrawToken(token common.Address, amount
 // Solidity: function withdrawToken(token address, amount uint256) returns()
 func (_EtherDelta *EtherDeltaTransactorSession) WithdrawToken(token common.Address, amount *big.Int) (*types.Transaction, error) {
 	return _EtherDelta.Contract.WithdrawToken(&_EtherDelta.TransactOpts, token, amount)
+}
+
+// EtherDeltaCancelIterator is returned from FilterCancel and is used to iterate over the raw logs and unpacked data for Cancel events raised by the EtherDelta contract.
+type EtherDeltaCancelIterator struct {
+	Event *EtherDeltaCancel // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *EtherDeltaCancelIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(EtherDeltaCancel)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(EtherDeltaCancel)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *EtherDeltaCancelIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *EtherDeltaCancelIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// EtherDeltaCancel represents a Cancel event raised by the EtherDelta contract.
+type EtherDeltaCancel struct {
+	TokenGet   common.Address
+	AmountGet  *big.Int
+	TokenGive  common.Address
+	AmountGive *big.Int
+	Expires    *big.Int
+	Nonce      *big.Int
+	User       common.Address
+	V          uint8
+	R          [32]byte
+	S          [32]byte
+	Raw        types.Log // Blockchain specific contextual infos
+}
+
+// FilterCancel is a free log retrieval operation binding the contract event 0x1e0b760c386003e9cb9bcf4fcf3997886042859d9b6ed6320e804597fcdb28b0.
+//
+// Solidity: event Cancel(tokenGet address, amountGet uint256, tokenGive address, amountGive uint256, expires uint256, nonce uint256, user address, v uint8, r bytes32, s bytes32)
+func (_EtherDelta *EtherDeltaFilterer) FilterCancel(opts *bind.FilterOpts) (*EtherDeltaCancelIterator, error) {
+
+	logs, sub, err := _EtherDelta.contract.FilterLogs(opts, "Cancel")
+	if err != nil {
+		return nil, err
+	}
+	return &EtherDeltaCancelIterator{contract: _EtherDelta.contract, event: "Cancel", logs: logs, sub: sub}, nil
+}
+
+// WatchCancel is a free log subscription operation binding the contract event 0x1e0b760c386003e9cb9bcf4fcf3997886042859d9b6ed6320e804597fcdb28b0.
+//
+// Solidity: event Cancel(tokenGet address, amountGet uint256, tokenGive address, amountGive uint256, expires uint256, nonce uint256, user address, v uint8, r bytes32, s bytes32)
+func (_EtherDelta *EtherDeltaFilterer) WatchCancel(opts *bind.WatchOpts, sink chan<- *EtherDeltaCancel) (event.Subscription, error) {
+
+	logs, sub, err := _EtherDelta.contract.WatchLogs(opts, "Cancel")
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(EtherDeltaCancel)
+				if err := _EtherDelta.contract.UnpackLog(event, "Cancel", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// EtherDeltaDepositIterator is returned from FilterDeposit and is used to iterate over the raw logs and unpacked data for Deposit events raised by the EtherDelta contract.
+type EtherDeltaDepositIterator struct {
+	Event *EtherDeltaDeposit // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *EtherDeltaDepositIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(EtherDeltaDeposit)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(EtherDeltaDeposit)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *EtherDeltaDepositIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *EtherDeltaDepositIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// EtherDeltaDeposit represents a Deposit event raised by the EtherDelta contract.
+type EtherDeltaDeposit struct {
+	Token   common.Address
+	User    common.Address
+	Amount  *big.Int
+	Balance *big.Int
+	Raw     types.Log // Blockchain specific contextual infos
+}
+
+// FilterDeposit is a free log retrieval operation binding the contract event 0xdcbc1c05240f31ff3ad067ef1ee35ce4997762752e3a095284754544f4c709d7.
+//
+// Solidity: event Deposit(token address, user address, amount uint256, balance uint256)
+func (_EtherDelta *EtherDeltaFilterer) FilterDeposit(opts *bind.FilterOpts) (*EtherDeltaDepositIterator, error) {
+
+	logs, sub, err := _EtherDelta.contract.FilterLogs(opts, "Deposit")
+	if err != nil {
+		return nil, err
+	}
+	return &EtherDeltaDepositIterator{contract: _EtherDelta.contract, event: "Deposit", logs: logs, sub: sub}, nil
+}
+
+// WatchDeposit is a free log subscription operation binding the contract event 0xdcbc1c05240f31ff3ad067ef1ee35ce4997762752e3a095284754544f4c709d7.
+//
+// Solidity: event Deposit(token address, user address, amount uint256, balance uint256)
+func (_EtherDelta *EtherDeltaFilterer) WatchDeposit(opts *bind.WatchOpts, sink chan<- *EtherDeltaDeposit) (event.Subscription, error) {
+
+	logs, sub, err := _EtherDelta.contract.WatchLogs(opts, "Deposit")
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(EtherDeltaDeposit)
+				if err := _EtherDelta.contract.UnpackLog(event, "Deposit", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// EtherDeltaOrderIterator is returned from FilterOrder and is used to iterate over the raw logs and unpacked data for Order events raised by the EtherDelta contract.
+type EtherDeltaOrderIterator struct {
+	Event *EtherDeltaOrder // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *EtherDeltaOrderIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(EtherDeltaOrder)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(EtherDeltaOrder)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *EtherDeltaOrderIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *EtherDeltaOrderIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// EtherDeltaOrder represents a Order event raised by the EtherDelta contract.
+type EtherDeltaOrder struct {
+	TokenGet   common.Address
+	AmountGet  *big.Int
+	TokenGive  common.Address
+	AmountGive *big.Int
+	Expires    *big.Int
+	Nonce      *big.Int
+	User       common.Address
+	Raw        types.Log // Blockchain specific contextual infos
+}
+
+// FilterOrder is a free log retrieval operation binding the contract event 0x3f7f2eda73683c21a15f9435af1028c93185b5f1fa38270762dc32be606b3e85.
+//
+// Solidity: event Order(tokenGet address, amountGet uint256, tokenGive address, amountGive uint256, expires uint256, nonce uint256, user address)
+func (_EtherDelta *EtherDeltaFilterer) FilterOrder(opts *bind.FilterOpts) (*EtherDeltaOrderIterator, error) {
+
+	logs, sub, err := _EtherDelta.contract.FilterLogs(opts, "Order")
+	if err != nil {
+		return nil, err
+	}
+	return &EtherDeltaOrderIterator{contract: _EtherDelta.contract, event: "Order", logs: logs, sub: sub}, nil
+}
+
+// WatchOrder is a free log subscription operation binding the contract event 0x3f7f2eda73683c21a15f9435af1028c93185b5f1fa38270762dc32be606b3e85.
+//
+// Solidity: event Order(tokenGet address, amountGet uint256, tokenGive address, amountGive uint256, expires uint256, nonce uint256, user address)
+func (_EtherDelta *EtherDeltaFilterer) WatchOrder(opts *bind.WatchOpts, sink chan<- *EtherDeltaOrder) (event.Subscription, error) {
+
+	logs, sub, err := _EtherDelta.contract.WatchLogs(opts, "Order")
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(EtherDeltaOrder)
+				if err := _EtherDelta.contract.UnpackLog(event, "Order", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// EtherDeltaTradeIterator is returned from FilterTrade and is used to iterate over the raw logs and unpacked data for Trade events raised by the EtherDelta contract.
+type EtherDeltaTradeIterator struct {
+	Event *EtherDeltaTrade // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *EtherDeltaTradeIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(EtherDeltaTrade)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(EtherDeltaTrade)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *EtherDeltaTradeIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *EtherDeltaTradeIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// EtherDeltaTrade represents a Trade event raised by the EtherDelta contract.
+type EtherDeltaTrade struct {
+	TokenGet   common.Address
+	AmountGet  *big.Int
+	TokenGive  common.Address
+	AmountGive *big.Int
+	Get        common.Address
+	Give       common.Address
+	Raw        types.Log // Blockchain specific contextual infos
+}
+
+// FilterTrade is a free log retrieval operation binding the contract event 0x6effdda786735d5033bfad5f53e5131abcced9e52be6c507b62d639685fbed6d.
+//
+// Solidity: event Trade(tokenGet address, amountGet uint256, tokenGive address, amountGive uint256, get address, give address)
+func (_EtherDelta *EtherDeltaFilterer) FilterTrade(opts *bind.FilterOpts) (*EtherDeltaTradeIterator, error) {
+
+	logs, sub, err := _EtherDelta.contract.FilterLogs(opts, "Trade")
+	if err != nil {
+		return nil, err
+	}
+	return &EtherDeltaTradeIterator{contract: _EtherDelta.contract, event: "Trade", logs: logs, sub: sub}, nil
+}
+
+// WatchTrade is a free log subscription operation binding the contract event 0x6effdda786735d5033bfad5f53e5131abcced9e52be6c507b62d639685fbed6d.
+//
+// Solidity: event Trade(tokenGet address, amountGet uint256, tokenGive address, amountGive uint256, get address, give address)
+func (_EtherDelta *EtherDeltaFilterer) WatchTrade(opts *bind.WatchOpts, sink chan<- *EtherDeltaTrade) (event.Subscription, error) {
+
+	logs, sub, err := _EtherDelta.contract.WatchLogs(opts, "Trade")
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(EtherDeltaTrade)
+				if err := _EtherDelta.contract.UnpackLog(event, "Trade", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// EtherDeltaWithdrawIterator is returned from FilterWithdraw and is used to iterate over the raw logs and unpacked data for Withdraw events raised by the EtherDelta contract.
+type EtherDeltaWithdrawIterator struct {
+	Event *EtherDeltaWithdraw // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *EtherDeltaWithdrawIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(EtherDeltaWithdraw)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(EtherDeltaWithdraw)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *EtherDeltaWithdrawIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *EtherDeltaWithdrawIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// EtherDeltaWithdraw represents a Withdraw event raised by the EtherDelta contract.
+type EtherDeltaWithdraw struct {
+	Token   common.Address
+	User    common.Address
+	Amount  *big.Int
+	Balance *big.Int
+	Raw     types.Log // Blockchain specific contextual infos
+}
+
+// FilterWithdraw is a free log retrieval operation binding the contract event 0xf341246adaac6f497bc2a656f546ab9e182111d630394f0c57c710a59a2cb567.
+//
+// Solidity: event Withdraw(token address, user address, amount uint256, balance uint256)
+func (_EtherDelta *EtherDeltaFilterer) FilterWithdraw(opts *bind.FilterOpts) (*EtherDeltaWithdrawIterator, error) {
+
+	logs, sub, err := _EtherDelta.contract.FilterLogs(opts, "Withdraw")
+	if err != nil {
+		return nil, err
+	}
+	return &EtherDeltaWithdrawIterator{contract: _EtherDelta.contract, event: "Withdraw", logs: logs, sub: sub}, nil
+}
+
+// WatchWithdraw is a free log subscription operation binding the contract event 0xf341246adaac6f497bc2a656f546ab9e182111d630394f0c57c710a59a2cb567.
+//
+// Solidity: event Withdraw(token address, user address, amount uint256, balance uint256)
+func (_EtherDelta *EtherDeltaFilterer) WatchWithdraw(opts *bind.WatchOpts, sink chan<- *EtherDeltaWithdraw) (event.Subscription, error) {
+
+	logs, sub, err := _EtherDelta.contract.WatchLogs(opts, "Withdraw")
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(EtherDeltaWithdraw)
+				if err := _EtherDelta.contract.UnpackLog(event, "Withdraw", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
 }
