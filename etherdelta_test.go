@@ -11,12 +11,20 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/miguelmota/go-etherdelta/helpers"
-	"github.com/miguelmota/go-solidity-sha3"
+	solsha3 "github.com/miguelmota/go-solidity-sha3"
 	"github.com/shopspring/decimal"
 )
 
 var userAddress = ""
 var privateKey = ""
+
+var s *Service
+
+func init() {
+	s = New(&Options{
+		ProviderURI: "wss://mainnet.infura.io/ws",
+	})
+}
 
 func TestGetOrderBook(t *testing.T) {
 	//t.Skip("Skipping GetOrderBook")
@@ -29,7 +37,7 @@ func TestGetOrderBook(t *testing.T) {
 		UserAddress:  userAddress,
 	}
 
-	orders, err := GetOrderBook(getOrderBookOpts)
+	orders, err := s.GetOrderBook(getOrderBookOpts)
 
 	if err != nil {
 		t.Error(err)
@@ -55,7 +63,7 @@ func TestGetTokenTicker(t *testing.T) {
 		TokenSymbol: "BAT",
 	}
 
-	ticker, err := GetTokenTicker(getTokenTickerOpts)
+	ticker, err := s.GetTokenTicker(getTokenTickerOpts)
 
 	if err != nil {
 		t.Errorf("%s", err)
@@ -72,7 +80,7 @@ func TestGetTokenPrice(t *testing.T) {
 		TokenSymbol: "BAT",
 	}
 
-	price, err := GetTokenPrice(getTokenPriceOpts)
+	price, err := s.GetTokenPrice(getTokenPriceOpts)
 
 	if err != nil {
 		t.Errorf("Got err: %s", err)
@@ -94,7 +102,7 @@ func TestGetTokenBalance(t *testing.T) {
 		UserAddress:  userAddress,
 	}
 
-	balance, err := GetTokenBalance(getTokenBalanceOpts)
+	balance, err := s.GetTokenBalance(getTokenBalanceOpts)
 
 	if err != nil {
 		t.Errorf("Got error: %s", err)
@@ -127,7 +135,7 @@ func TestPostOrder(t *testing.T) {
 		},
 	}
 
-	result, err := PostOrder(postOrderOpts)
+	result, err := s.PostOrder(postOrderOpts)
 
 	if err != nil {
 		t.Error(err)
@@ -154,7 +162,7 @@ func TestMakerOder(t *testing.T) {
 		EthCost:      &ethCost,
 	}
 
-	result, err := MakeOrder(makeOrderOpts)
+	result, err := s.MakeOrder(makeOrderOpts)
 
 	if err != nil {
 		t.Errorf("Got error: %s", err)
@@ -188,7 +196,7 @@ func TestCancelOrder(t *testing.T) {
 		Order:      order,
 	}
 
-	txHash, err := CancelOrder(cancelOrderOpts)
+	txHash, err := s.CancelOrder(cancelOrderOpts)
 
 	if err != nil {
 		t.Error(err)
@@ -214,7 +222,7 @@ func TestMakeTrade(t *testing.T) {
 		UserAddress:  userAddress,
 	}
 
-	orders, err := GetOrderBook(getOrderBookOpts)
+	orders, err := s.GetOrderBook(getOrderBookOpts)
 
 	if err != nil {
 		t.Error(err)
@@ -271,7 +279,7 @@ func TestMakeTrade(t *testing.T) {
 		EthCost: tokenAmountInWei,
 	}
 
-	txHash, err := MakeTrade(makeTradeOpts)
+	txHash, err := s.MakeTrade(makeTradeOpts)
 
 	if err != nil {
 		t.Errorf("Trade failed, got error: %s", err)
@@ -302,7 +310,7 @@ func TestDepositEth(t *testing.T) {
 		Auth: &auth,
 	}
 
-	txHash, err := DepositEth(depositEthOpts)
+	txHash, err := s.DepositEth(depositEthOpts)
 
 	if err != nil {
 		t.Error(err)
@@ -325,7 +333,7 @@ func TestWithdrawToken(t *testing.T) {
 		UserAddress:  userAddress,
 	}
 
-	tokenAmount, err := GetTokenBalance(getTokenBalanceOpts)
+	tokenAmount, err := s.GetTokenBalance(getTokenBalanceOpts)
 
 	if err != nil {
 		t.Errorf("Error getting token balance, got %s", err)
@@ -348,7 +356,7 @@ func TestWithdrawToken(t *testing.T) {
 		TokenAmount:  tokenAmount,
 	}
 
-	txHash, err := WithdrawToken(withdrawTokenOpts)
+	txHash, err := s.WithdrawToken(withdrawTokenOpts)
 
 	if err != nil {
 		t.Errorf("Error withrawing token, got %s", err)

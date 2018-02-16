@@ -8,27 +8,29 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
+// Client client
 var Client *ethclient.Client
-var ETH_PROVIDER_URI = "wss://mainnet.infura.io/ws"
 
-func init() {
-	providerUriEnv := os.Getenv("ETH_PROVIDER_URI")
+var defaultProviderURI = "wss://mainnet.infura.io/ws"
 
-	if providerUriEnv != "" {
-		ETH_PROVIDER_URI = providerUriEnv
-	}
-
-	if ETH_PROVIDER_URI == "" {
-		log.Fatal("ETH_PROVIDER_URI environment variable is required")
-	}
-
+// SetClientProviderURI ETH provider client URI
+func SetClientProviderURI(providerURI string) {
 	// Create an IPC based RPC connection to a remote node
-	client, err := ethclient.Dial(ETH_PROVIDER_URI)
+	client, err := ethclient.Dial(providerURI)
 	Client = client
-
 	if err != nil {
 		panic(err)
 	}
 
-	log.Infof("Connected EtherDelta client to provider: %s", ETH_PROVIDER_URI)
+	log.Infof("Connected EtherDelta client to provider: %s", providerURI)
+}
+
+func init() {
+	providerURIEnv := os.Getenv("ETH_PROVIDER_URI")
+
+	if providerURIEnv != "" {
+		SetClientProviderURI(providerURIEnv)
+	} else {
+		SetClientProviderURI(defaultProviderURI)
+	}
 }

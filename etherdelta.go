@@ -19,22 +19,52 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/ethclient"
 	contracts "github.com/miguelmota/go-etherdelta/contracts"
 	"github.com/miguelmota/go-etherdelta/helpers"
 	"github.com/miguelmota/go-etherdelta/utils"
-	"github.com/miguelmota/go-solidity-sha3"
+	solsha3 "github.com/miguelmota/go-solidity-sha3"
 	"github.com/shopspring/decimal"
 )
 
-// EDInstance Export EtherDelta contract instance
-var EDInstance *contracts.EtherDelta
-var etherDeltaContractAddress = "0x8d12a197cb00d4747a1fe03395095ce2a5cc6819"
+const etherDeltaContractAddress = "0x8d12a197cb00d4747a1fe03395095ce2a5cc6819"
+
 var httpClient = &http.Client{Timeout: 10 * time.Second}
 var maxTries = 3
 var cache *freecache.Cache
 
+// Service service struct
+type Service struct {
+	client   *ethclient.Client
+	instance *contracts.EtherDelta
+}
+
+// Options service options
+type Options struct {
+	ProviderURI string
+}
+
+// New returns new service
+func New(opts *Options) *Service {
+	if opts.ProviderURI != "" {
+		helpers.SetClientProviderURI(opts.ProviderURI)
+	}
+	client := helpers.Client
+	instance, err := contracts.NewEtherDelta(common.HexToAddress(etherDeltaContractAddress), client)
+
+	if err != nil {
+		log.Fatalf("Could not initialize EtherDelta contract, got error %s", err)
+	}
+
+	cache = freecache.NewCache(1e10)
+	return &Service{
+		client:   client,
+		instance: instance,
+	}
+}
+
 // GetOrderBook Get the Order Book
-func GetOrderBook(opts *GetOrderBookOpts) (*OrderBook, error) {
+func (s *Service) GetOrderBook(opts *GetOrderBookOpts) (*OrderBook, error) {
 	log.Debug("Attempting websocket connection to get order book")
 
 	orderBook := OrderBook{
@@ -102,110 +132,110 @@ func GetOrderBook(opts *GetOrderBookOpts) (*OrderBook, error) {
 		ordersTypeArray := allOrders[orderType].([]interface{})
 
 		for i := range ordersTypeArray {
-			orderJson := ordersTypeArray[i].(map[string]interface{})
+			orderJSON := ordersTypeArray[i].(map[string]interface{})
 			order := Order{}
 
 			// TODO: improve this
 
-			id, ok := orderJson["id"].(string)
+			id, ok := orderJSON["id"].(string)
 
 			if ok {
 				order.Id = id
 			}
 
-			amount, ok := orderJson["amount"].(string)
+			amount, ok := orderJSON["amount"].(string)
 
 			if ok {
 				order.Amount = amount
 			}
 
-			price, ok := orderJson["price"].(string)
+			price, ok := orderJSON["price"].(string)
 
 			if ok {
 				order.Price = price
 			}
 
-			tokenGet, ok := orderJson["tokenGet"].(string)
+			tokenGet, ok := orderJSON["tokenGet"].(string)
 
 			if ok {
 				order.TokenGet = tokenGet
 			}
 
-			amountGet, ok := orderJson["amountGet"].(string)
+			amountGet, ok := orderJSON["amountGet"].(string)
 
 			if ok {
 				order.AmountGet = amountGet
 			}
 
-			tokenGive, ok := orderJson["tokenGive"].(string)
+			tokenGive, ok := orderJSON["tokenGive"].(string)
 
 			if ok {
 				order.TokenGive = tokenGive
 			}
 
-			amountGive, ok := orderJson["amountGive"].(string)
+			amountGive, ok := orderJSON["amountGive"].(string)
 
 			if ok {
 				order.AmountGive = amountGive
 			}
 
-			expires, ok := orderJson["expires"].(string)
+			expires, ok := orderJSON["expires"].(string)
 
 			if ok {
 				order.Expires = expires
 			}
 
-			nonce, ok := orderJson["nonce"].(string)
+			nonce, ok := orderJSON["nonce"].(string)
 
 			if ok {
 				order.Nonce = nonce
 			}
 
-			v := int(orderJson["v"].(float64))
+			v := int(orderJSON["v"].(float64))
 			order.V = v
 
-			r, ok := orderJson["r"].(string)
+			r, ok := orderJSON["r"].(string)
 
 			if ok {
 				order.R = r
 			}
 
-			s, ok := orderJson["s"].(string)
+			s, ok := orderJSON["s"].(string)
 			if ok {
 				order.S = s
 			}
 
-			user, ok := orderJson["user"].(string)
+			user, ok := orderJSON["user"].(string)
 
 			if ok {
 				order.User = user
 			}
 
-			updated, ok := orderJson["updated"].(string)
+			updated, ok := orderJSON["updated"].(string)
 
 			if ok {
 				order.Updated = updated
 			}
 
-			availableVolume, ok := orderJson["availableVolume"].(string)
+			availableVolume, ok := orderJSON["availableVolume"].(string)
 
 			if ok {
 				order.AvailableVolume = availableVolume
 			}
 
-			ethAvailableVolume, ok := orderJson["ethAvailableVolume"].(string)
+			ethAvailableVolume, ok := orderJSON["ethAvailableVolume"].(string)
 
 			if ok {
 				order.EthAvailableVolume = ethAvailableVolume
 			}
 
-			availableVolumeBase, ok := orderJson["availableVolumeBase"].(string)
+			availableVolumeBase, ok := orderJSON["availableVolumeBase"].(string)
 
 			if ok {
 				order.AvailableVolumeBase = availableVolumeBase
 			}
 
-			amountFilled, ok := orderJson["amountFilled"].(string)
+			amountFilled, ok := orderJSON["amountFilled"].(string)
 
 			if ok {
 				order.AmountFilled = amountFilled
@@ -225,7 +255,7 @@ func GetOrderBook(opts *GetOrderBookOpts) (*OrderBook, error) {
 }
 
 // GetTokenTicker Get ticker info for token
-func GetTokenTicker(opts *GetTokenTickerOpts) (*TokenTicker, error) {
+func (s *Service) GetTokenTicker(opts *GetTokenTickerOpts) (*TokenTicker, error) {
 	log.Debug("Attempting websocket connection to get token ticker")
 
 	tokenTicker := &TokenTicker{}
@@ -390,7 +420,7 @@ func GetTokenTicker(opts *GetTokenTickerOpts) (*TokenTicker, error) {
 }
 
 // GetTokenPrice Get last trade price for token
-func GetTokenPrice(opts *GetTokenPriceOpts) (*decimal.Decimal, error) {
+func (s *Service) GetTokenPrice(opts *GetTokenPriceOpts) (*decimal.Decimal, error) {
 	var price decimal.Decimal
 
 	cachekey := []byte(opts.TokenSymbol)
@@ -409,7 +439,7 @@ func GetTokenPrice(opts *GetTokenPriceOpts) (*decimal.Decimal, error) {
 		TokenSymbol: "UKG",
 	}
 
-	ticker, err := GetTokenTicker(getTokenTickerOpts)
+	ticker, err := s.GetTokenTicker(getTokenTickerOpts)
 
 	if err != nil {
 		return &price, err
@@ -423,13 +453,13 @@ func GetTokenPrice(opts *GetTokenPriceOpts) (*decimal.Decimal, error) {
 }
 
 // GetTokenBalance Get token balance on EtherDelta for account
-func GetTokenBalance(opts *GetTokenBalanceOpts) (*big.Int, error) {
+func (s *Service) GetTokenBalance(opts *GetTokenBalanceOpts) (*big.Int, error) {
 	var (
 		err               error
 		etherDeltaBalance *big.Int
 	)
 
-	etherDeltaBalance, err = EDInstance.BalanceOf(&bind.CallOpts{Pending: true}, common.HexToAddress(opts.TokenAddress), common.HexToAddress(opts.UserAddress))
+	etherDeltaBalance, err = s.instance.BalanceOf(&bind.CallOpts{Pending: true}, common.HexToAddress(opts.TokenAddress), common.HexToAddress(opts.UserAddress))
 
 	if err != nil {
 		return etherDeltaBalance, err
@@ -439,7 +469,7 @@ func GetTokenBalance(opts *GetTokenBalanceOpts) (*big.Int, error) {
 }
 
 // PostOrder Post an order to EtherDelta
-func PostOrder(opts *PostOrderOpts) (string, error) {
+func (s *Service) PostOrder(opts *PostOrderOpts) (string, error) {
 	wsrequest := &wsRequest{
 		EmitTopic: "message",
 		EmitBody: &wsEmitBody{
@@ -471,7 +501,7 @@ func PostOrder(opts *PostOrderOpts) (string, error) {
 }
 
 // MakeOrder Generate an order and post it to EtherDelta
-func MakeOrder(opts *MakeOrderOpts) (string, error) {
+func (s *Service) MakeOrder(opts *MakeOrderOpts) (string, error) {
 	var result string
 	decimals, err := helpers.GetTokenDecimals(opts.TokenAddress)
 
@@ -565,7 +595,7 @@ func MakeOrder(opts *MakeOrderOpts) (string, error) {
 		UserAddress:  opts.UserAddress,
 	}
 
-	result, err = PostOrder(postOrderOpts)
+	result, err = s.PostOrder(postOrderOpts)
 
 	if err != nil {
 		return result, err
@@ -577,7 +607,7 @@ func MakeOrder(opts *MakeOrderOpts) (string, error) {
 }
 
 // CancelOrder Cancel an order on EtherDelta
-func CancelOrder(opts *CancelOrderOpts) ([]byte, error) {
+func (s *Service) CancelOrder(opts *CancelOrderOpts) ([]byte, error) {
 	var txHash []byte
 	order := opts.Order
 	key, err := crypto.HexToECDSA(opts.PrivateKey)
@@ -604,7 +634,7 @@ func CancelOrder(opts *CancelOrderOpts) ([]byte, error) {
 	copy(R[:], common.FromHex(order.R)[:])
 	copy(S[:], common.FromHex(order.S)[:])
 
-	tx, err := EDInstance.CancelOrder(
+	tx, err := s.instance.CancelOrder(
 		&auth,
 		common.HexToAddress(order.TokenGet),
 		amountGet,
@@ -625,7 +655,7 @@ func CancelOrder(opts *CancelOrderOpts) ([]byte, error) {
 }
 
 // MakeTrade Make an order trade on EtherDelta
-func MakeTrade(opts *MakeTradeOpts) ([]byte, error) {
+func (s *Service) MakeTrade(opts *MakeTradeOpts) ([]byte, error) {
 	var txHash []byte
 	order := opts.Order
 
@@ -651,7 +681,7 @@ func MakeTrade(opts *MakeTradeOpts) ([]byte, error) {
 	tokenGet := common.HexToAddress(order.TokenGet)
 	tokenGive := common.HexToAddress(order.TokenGive)
 
-	isValid, err := EDInstance.TestTrade(
+	isValid, err := s.instance.TestTrade(
 		&bind.CallOpts{},
 		tokenGet,
 		amountGet,
@@ -671,7 +701,7 @@ func MakeTrade(opts *MakeTradeOpts) ([]byte, error) {
 		return txHash, errors.New("Trade is not valid")
 	}
 
-	tx, err := EDInstance.Trade(
+	tx, err := s.instance.Trade(
 		opts.Auth,
 		tokenGet,
 		amountGet,
@@ -698,10 +728,10 @@ func MakeTrade(opts *MakeTradeOpts) ([]byte, error) {
 }
 
 // DepositEth Deposit ETH to EtherDelta
-func DepositEth(opts *DepositEthOpts) ([]byte, error) {
+func (s *Service) DepositEth(opts *DepositEthOpts) ([]byte, error) {
 	var txHash []byte
 
-	tx, err := EDInstance.Deposit(opts.Auth)
+	tx, err := s.instance.Deposit(opts.Auth)
 
 	if err != nil {
 		return txHash, err
@@ -715,9 +745,9 @@ func DepositEth(opts *DepositEthOpts) ([]byte, error) {
 }
 
 // WithdrawToken Withdraw token from EtherDelta
-func WithdrawToken(opts *WithdrawTokenOpts) ([]byte, error) {
+func (s *Service) WithdrawToken(opts *WithdrawTokenOpts) ([]byte, error) {
 	var txHash []byte
-	tx, err := EDInstance.WithdrawToken(
+	tx, err := s.instance.WithdrawToken(
 		opts.Auth,
 		common.HexToAddress(opts.TokenAddress),
 		opts.TokenAmount,
@@ -734,8 +764,8 @@ func WithdrawToken(opts *WithdrawTokenOpts) ([]byte, error) {
 	return txHash, nil
 }
 
-// GetJson Make a JSON request
-func GetJson(url string) (string, error) {
+// GetJSON Make a JSON request
+func GetJSON(url string) (string, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	req.Header.Add("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_0) AppleWebKit/534.24 (KHTML, like Gecko) Chrome/11.0.696.0 Safari/534.24")
 	resp, err := httpClient.Do(req)
@@ -789,9 +819,9 @@ func ParseStringExpNotation(str string) string {
 	return str
 }
 
-func getTickerApi() (string, error) {
+func getTickerAPI() (string, error) {
 	url := "https://api.etherdelta.com/returnTicker"
-	jsonStr, err := GetJson(url)
+	jsonStr, err := GetJSON(url)
 
 	return jsonStr, err
 }
@@ -820,16 +850,4 @@ func makeWSRequest(wsrequest *wsRequest) (interface{}, error) {
 	}
 
 	return result.Message, nil
-}
-
-func init() {
-	instance, err := contracts.NewEtherDelta(common.HexToAddress(etherDeltaContractAddress), helpers.Client)
-
-	if err != nil {
-		log.Fatalf("Could not initialize EtherDelta contract, got error %s", err)
-	}
-
-	EDInstance = instance
-
-	cache = freecache.NewCache(1e10)
 }

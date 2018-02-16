@@ -8,18 +8,27 @@
 
 [https://godoc.org/github.com/miguelmota/go-etherdelta](https://godoc.org/github.com/miguelmota/go-etherdelta)
 
+## Getting started
+
+```go
+service = etherdelta.New(&etherdelta.Options{
+  ProviderURI: "http://mainnet.infura.io/ws",
+})
+
+orders, err := service.GetOrderBook(&GetOrderBookOpts{
+  TokenAddress: "0x0d8775f648430679a709e98d2b0cb6250d2887ef"
+})
+
+log.Println(orders)
+```
+
 # Examples
 
 Take a look at the [tests](./etherdelta_test.go).
 
 ## Config
 
-By default, the Ethereum provider is to `wss://mainnet.infura.io/ws` but you can override it by setting the `ETH_PROVIDER_URI` environment variable.
-
-
-```bash
-export ETH_PROVIDER_URI='wss://mainnet.infura.io/ws'
-```
+You can pass the `ProviderURI` property to the EtherDelta constructor options. If this is not set, then the service will read the `ETH_PROVIDER_URI` environment variable, otherwise the Ethereum provider is set to `wss://mainnet.infura.io/ws` by default.
 
 ## Test
 
