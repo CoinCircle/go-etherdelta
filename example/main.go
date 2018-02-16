@@ -8,7 +8,7 @@ import (
 
 func main() {
 	service := etherdelta.New(&etherdelta.Options{
-		ProviderURI: "http://mainnet.infura.io/ws",
+		ProviderURI: "wss://mainnet.infura.io/ws",
 	})
 
 	orders, err := service.GetOrderBook(&etherdelta.GetOrderBookOpts{
