@@ -3,8 +3,6 @@ package helpers
 import (
 	"os"
 
-	log "github.com/sirupsen/logrus"
-
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
@@ -22,7 +20,7 @@ func SetClientProviderURI(providerURI string) {
 		panic(err)
 	}
 
-	log.Infof("Connected EtherDelta client to provider: %s", providerURI)
+	//log.Infof("Connected EtherDelta client to provider: %s", providerURI)
 }
 
 func init() {

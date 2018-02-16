@@ -36,6 +36,16 @@ You can pass the `ProviderURI` property to the EtherDelta constructor options. I
 go test -v ./...
 ```
 
+## FAQ
+
+- Q: Why do I get empty results sometimes?
+
+    - A: Unfortunately, the EtherDelta websocket client is unreliable.
+
+- Q: It's completely not working anymore!
+
+    - A: EtherDelta may have changed their API or websocket endpoint.
+
 ## Resources
 
 - [EtherDelta API](https://github.com/etherdelta/etherdelta.github.io/blob/master/docs/API.md)

@@ -7,15 +7,15 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/graarh/golang-socketio"
-	"github.com/graarh/golang-socketio/transport"
+	gosocketio "github.com/graarh/golang-socketio"
+	transport "github.com/graarh/golang-socketio/transport"
 )
 
-const etherDeltaWsUrl = "wss://socket.etherdelta.com/socket.io/?EIO=3&transport=websocket"
+const etherDeltaWSURL = "wss://socket.etherdelta.com/socket.io/?EIO=3&transport=websocket"
 
 func newWSClient(isConnected chan bool) wsClient {
 	sockclient, err := gosocketio.Dial(
-		etherDeltaWsUrl,
+		etherDeltaWSURL,
 		transport.GetDefaultWebsocketTransport(),
 	)
 
