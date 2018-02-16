@@ -48,6 +48,7 @@ type Options struct {
 func New(opts *Options) *Service {
 	if opts.ProviderURI != "" {
 		helpers.SetClientProviderURI(opts.ProviderURI)
+		log.Println("FOO")
 	}
 	client := helpers.Client
 	instance, err := contracts.NewEtherDelta(common.HexToAddress(etherDeltaContractAddress), client)

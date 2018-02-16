@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"log"
 	"os"
 
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -28,6 +29,7 @@ func init() {
 
 	if providerURIEnv != "" {
 		SetClientProviderURI(providerURIEnv)
+		log.Println("YO")
 	} else {
 		SetClientProviderURI(defaultProviderURI)
 	}
