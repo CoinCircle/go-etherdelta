@@ -20,12 +20,6 @@
   version = "v1.0.0"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/coincircle/exchange"
-  packages = ["ethereum/token"]
-  revision = "3e5ae418fc4358ede752f6e7a993819e82dbedc3"
-
-[[projects]]
   name = "github.com/coocood/freecache"
   packages = ["."]
   revision = "f3233c8095b26cd0dea0b136b931708c05defa08"
@@ -121,12 +115,6 @@
   packages = ["."]
   revision = "7af7a1e09ba336d2ea14b1ce73bf693c6837dbf6"
   version = "v1.2"
-
-[[projects]]
-  name = "github.com/shopspring/decimal"
-  packages = ["."]
-  revision = "9ca7f51822d222ae4e246f070f9aad863599bd1a"
-  version = "1.0.0"
 
 [[projects]]
   name = "github.com/sirupsen/logrus"

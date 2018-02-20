@@ -24,11 +24,6 @@
 #   go-tests = true
 #   unused-packages = true
 
-
-[[constraint]]
-  branch = "master"
-  name = "github.com/coincircle/exchange"
-
 [[constraint]]
   name = "github.com/coocood/freecache"
   version = "1.0.1"
@@ -44,10 +39,6 @@
 [[constraint]]
   branch = "master"
   name = "github.com/miguelmota/go-solidity-sha3"
-
-[[constraint]]
-  name = "github.com/shopspring/decimal"
-  version = "1.0.0"
 
 [[constraint]]
   name = "github.com/sirupsen/logrus"
