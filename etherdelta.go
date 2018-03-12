@@ -35,17 +35,22 @@ var cache *freecache.Cache
 
 // Service service struct
 type Service struct {
-	client   *ethclient.Client
-	instance *contracts.EtherDelta
+	client       *ethclient.Client
+	instance     *contracts.EtherDelta
+	websocketURI string
 }
 
 // Options service options
 type Options struct {
-	ProviderURI string
+	ProviderURI  string
+	websocketURI string
 }
 
-// New returns new service
-func New(opts *Options) *Service {
+const etherDeltaWSURL = "wss://socket.etherdelta.com/socket.io/?EIO=3&transport=websocket"
+const forkDeltaWSURL = "wss://api.forkdelta.com/socket.io/?EIO=3&transport=websocket"
+
+// newService returns a new service
+func newService(opts *Options) *Service {
 	if opts.ProviderURI != "" {
 		helpers.SetClientProviderURI(opts.ProviderURI)
 	}
@@ -56,11 +61,24 @@ func New(opts *Options) *Service {
 		log.Fatalf("Could not initialize EtherDelta contract, got error %s", err)
 	}
 
-	cache = freecache.NewCache(1e10)
+	cache = freecache.NewCache(0)
 	return &Service{
-		client:   client,
-		instance: instance,
+		client:       client,
+		instance:     instance,
+		websocketURI: opts.websocketURI,
 	}
+}
+
+// New returns new service
+func New(opts *Options) *Service {
+	opts.websocketURI = etherDeltaWSURL
+	return newService(opts)
+}
+
+// NewForkDelta returns new ForkDelta service
+func NewForkDelta(opts *Options) *Service {
+	opts.websocketURI = forkDeltaWSURL
+	return newService(opts)
 }
 
 // GetOrderBook Get the Order Book
@@ -92,7 +110,7 @@ func (s *Service) GetOrderBook(opts *GetOrderBookOpts) (*OrderBook, error) {
 			ListenTopic: "market",
 		}
 
-		result, err := makeWSRequest(wsrequest)
+		result, err := s.makeWSRequest(wsrequest)
 
 		if err != nil {
 			tries = tries + 1
@@ -280,7 +298,7 @@ func (s *Service) GetTokenTicker(opts *GetTokenTickerOpts) (*TokenTicker, error)
 			ListenTopic: "market",
 		}
 
-		result, err := makeWSRequest(wsrequest)
+		result, err := s.makeWSRequest(wsrequest)
 
 		if err != nil {
 			tries = tries + 1
@@ -480,7 +498,7 @@ func (s *Service) PostOrder(opts *PostOrderOpts) (string, error) {
 		ListenTopic: "messageResult",
 	}
 
-	postResponse, err := makeWSRequest(wsrequest)
+	postResponse, err := s.makeWSRequest(wsrequest)
 	result := ""
 
 	if err != nil {
@@ -765,7 +783,7 @@ func (s *Service) WithdrawToken(opts *WithdrawTokenOpts) ([]byte, error) {
 }
 
 // GetJSON Make a JSON request
-func GetJSON(url string) (string, error) {
+func (s *Service) GetJSON(url string) (string, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	req.Header.Add("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_0) AppleWebKit/534.24 (KHTML, like Gecko) Chrome/11.0.696.0 Safari/534.24")
 	resp, err := httpClient.Do(req)
@@ -781,7 +799,7 @@ func GetJSON(url string) (string, error) {
 }
 
 // ParseStringExpNotation Parse string in exponential notation
-func ParseStringExpNotation(str string) string {
+func (s *Service) ParseStringExpNotation(str string) string {
 	// etherdelta will return a string such as "2.8e+21" if the number is too big
 	{
 		re := regexp.MustCompile(`e+`)
@@ -819,16 +837,16 @@ func ParseStringExpNotation(str string) string {
 	return str
 }
 
-func getTickerAPI() (string, error) {
+func (s *Service) getTickerAPI() (string, error) {
 	url := "https://api.etherdelta.com/returnTicker"
-	jsonStr, err := GetJSON(url)
+	jsonStr, err := s.GetJSON(url)
 
 	return jsonStr, err
 }
 
-func makeWSRequest(wsrequest *wsRequest) (interface{}, error) {
+func (s *Service) makeWSRequest(wsrequest *wsRequest) (interface{}, error) {
 	isConnected := make(chan bool, 1)
-	client := newWSClient(isConnected)
+	client := newWSClient(s.websocketURI, isConnected)
 
 	switch <-isConnected {
 	case false:

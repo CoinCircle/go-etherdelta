@@ -11,11 +11,9 @@ import (
 	transport "github.com/graarh/golang-socketio/transport"
 )
 
-const etherDeltaWSURL = "wss://socket.etherdelta.com/socket.io/?EIO=3&transport=websocket"
-
-func newWSClient(isConnected chan bool) wsClient {
+func newWSClient(url string, isConnected chan bool) wsClient {
 	sockclient, err := gosocketio.Dial(
-		etherDeltaWSURL,
+		url,
 		transport.GetDefaultWebsocketTransport(),
 	)
 

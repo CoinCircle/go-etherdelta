@@ -36,7 +36,17 @@ func main() {
 }
 ```
 
-# Examples
+## ForkDelta
+
+A [ForkDelta](https://forkdelta.github.io/) client is avaiable:
+
+```go
+service := ed.NewForkDelta(&ed.Options{
+  ProviderURI: "wss://mainnet.infura.io/ws",
+})
+```
+
+## Examples
 
 Take a look at the [tests](./etherdelta_test.go).
 
@@ -54,7 +64,7 @@ go test -v ./...
 
 - Q: Why do I get empty results sometimes?
 
-    - A: Unfortunately, the EtherDelta websocket client is unreliable.
+    - A: Sometimes the EtherDelta websocket connection randomly disconnects. It can be unreliable at times.
 
 - Q: It's completely not working anymore!
 

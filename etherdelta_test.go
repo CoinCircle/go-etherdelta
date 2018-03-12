@@ -232,8 +232,8 @@ func TestMakeTrade(t *testing.T) {
 	order := orders.Sells[0]
 
 	t.Log("Order to buy")
-	t.Log(ParseStringExpNotation(order.AmountGet))
-	t.Log(ParseStringExpNotation(order.AmountGive))
+	t.Log(s.ParseStringExpNotation(order.AmountGet))
+	t.Log(s.ParseStringExpNotation(order.AmountGive))
 	t.Log(order.TokenGet)
 	t.Log(order.TokenGive)
 	t.Log(order.Expires)
@@ -247,8 +247,8 @@ func TestMakeTrade(t *testing.T) {
 	nonce, _ := strconv.Atoi(order.Nonce)
 
 	orderPost := &OrderPost{
-		AmountGet:       ParseStringExpNotation(order.AmountGet),  // total cost in eth
-		AmountGive:      ParseStringExpNotation(order.AmountGive), // how much we'll get
+		AmountGet:       s.ParseStringExpNotation(order.AmountGet),  // total cost in eth
+		AmountGive:      s.ParseStringExpNotation(order.AmountGive), // how much we'll get
 		TokenGet:        order.TokenGet,
 		TokenGive:       order.TokenGive,
 		ContractAddress: contractAddress,
@@ -388,7 +388,7 @@ func TestParseStringExpNotation(t *testing.T) {
 	{
 		str := "2.8e+21"
 
-		got := ParseStringExpNotation(str)
+		got := s.ParseStringExpNotation(str)
 		expected := "2800000000000000000000"
 
 		if expected != got {
@@ -398,7 +398,7 @@ func TestParseStringExpNotation(t *testing.T) {
 	{
 		str := "2.61-06"
 
-		got := ParseStringExpNotation(str)
+		got := s.ParseStringExpNotation(str)
 		expected := "0.00000261"
 
 		if expected != got {
