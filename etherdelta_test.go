@@ -7,10 +7,10 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/coincircle/go-etherdelta/helpers"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/miguelmota/go-etherdelta/helpers"
 	solsha3 "github.com/miguelmota/go-solidity-sha3"
 	"github.com/shopspring/decimal"
 )
@@ -518,7 +518,7 @@ func TestSignature(t *testing.T) {
 	}
 
 	recoveredPub, err := crypto.Ecrecover(msg, sig)
-	pubKey, err := crypto.UnmarshalPubkey(recoveredPub)
+	pubKey, err := crypto.DecompressPubkey(recoveredPub)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -15,14 +15,14 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
+	contracts "github.com/coincircle/go-etherdelta/contracts"
+	"github.com/coincircle/go-etherdelta/helpers"
+	"github.com/coincircle/go-etherdelta/utils"
 	"github.com/coocood/freecache"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
-	contracts "github.com/miguelmota/go-etherdelta/contracts"
-	"github.com/miguelmota/go-etherdelta/helpers"
-	"github.com/miguelmota/go-etherdelta/utils"
 	solsha3 "github.com/miguelmota/go-solidity-sha3"
 	"github.com/shopspring/decimal"
 )
@@ -599,7 +599,7 @@ func (s *Service) MakeOrder(opts *MakeOrderOpts) (string, error) {
 		return result, fmt.Errorf("ECRecover error: %s", err)
 	}
 
-	pubKey, err := crypto.UnmarshalPubkey(recoveredPub)
+	pubKey, err := crypto.DecompressPubkey(recoveredPub)
 	if err != nil {
 		return result, fmt.Errorf("unmarshal pub key err: %s", err)
 	}
