@@ -37,7 +37,7 @@
   name = "github.com/graarh/golang-socketio"
 
 [[constraint]]
-  branch = "master"
+  revision = "92fbf5a798e893dffd4a77c2123f4fdfc7a6c25d"
   name = "github.com/miguelmota/go-solidity-sha3"
 
 [[constraint]]

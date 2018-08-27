@@ -562,9 +562,9 @@ func (s *Service) MakeOrder(opts *MakeOrderOpts) (string, error) {
 	data := solsha3.ConcatByteSlices(
 		solsha3.Address(orderPost.ContractAddress),
 		solsha3.Address(orderPost.TokenGet),
-		solsha3.Uint256FromString(orderPost.AmountGet),
+		solsha3.Uint256(orderPost.AmountGet),
 		solsha3.Address(orderPost.TokenGive),
-		solsha3.Uint256FromString(orderPost.AmountGive),
+		solsha3.Uint256(orderPost.AmountGive),
 		solsha3.Uint256(big.NewInt(int64(orderPost.Expires))),
 		solsha3.Uint256(big.NewInt(int64(orderPost.Nonce))),
 	)
@@ -599,7 +599,10 @@ func (s *Service) MakeOrder(opts *MakeOrderOpts) (string, error) {
 		return result, fmt.Errorf("ECRecover error: %s", err)
 	}
 
-	pubKey := crypto.ToECDSAPub(recoveredPub)
+	pubKey, err := crypto.UnmarshalPubkey(recoveredPub)
+	if err != nil {
+		return result, fmt.Errorf("unmarshal pub key err: %s", err)
+	}
 	recoveredAddr := crypto.PubkeyToAddress(*pubKey)
 	addr := common.HexToAddress(opts.UserAddress)
 

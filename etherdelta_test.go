@@ -430,9 +430,9 @@ func TestSignature(t *testing.T) {
 	data := solsha3.ConcatByteSlices(
 		solsha3.Address(orderPost.ContractAddress),
 		solsha3.Address(orderPost.TokenGet),
-		solsha3.Uint256FromString(orderPost.AmountGet),
+		solsha3.Uint256(orderPost.AmountGet),
 		solsha3.Address(orderPost.TokenGive),
-		solsha3.Uint256FromString(orderPost.AmountGive),
+		solsha3.Uint256(orderPost.AmountGive),
 		solsha3.Uint256(big.NewInt(int64(orderPost.Expires))),
 		solsha3.Uint256(big.NewInt(int64(orderPost.Nonce))),
 	)
@@ -518,7 +518,10 @@ func TestSignature(t *testing.T) {
 	}
 
 	recoveredPub, err := crypto.Ecrecover(msg, sig)
-	pubKey := crypto.ToECDSAPub(recoveredPub)
+	pubKey, err := crypto.UnmarshalPubkey(recoveredPub)
+	if err != nil {
+		t.Fatal(err)
+	}
 	recoveredAddr := crypto.PubkeyToAddress(*pubKey)
 
 	addr := common.HexToAddress(orderPost.User)
